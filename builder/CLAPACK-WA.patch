@@ -1,0 +1,51 @@
+diff --git a/F2CLIBS/libf2c/Makefile b/F2CLIBS/libf2c/Makefile
+index d9a42da..47619d3 100644
+--- a/F2CLIBS/libf2c/Makefile
++++ b/F2CLIBS/libf2c/Makefile
+@@ -180,9 +180,9 @@ xwsne.o:	fmt.h
+ 
+ arith.h: arithchk.c
+ 	$(CC) $(CFLAGS) -DNO_FPINIT arithchk.c -lm ||\
+-	 $(CC) -DNO_LONG_LONG $(CFLAGS) -DNO_FPINIT arithchk.c -lm
+-	./a.out >arith.h
+-	rm -f a.out arithchk.o
++	$(CC) -DNO_LONG_LONG $(CFLAGS) -DNO_FPINIT arithchk.c -lm
++	node a.out.js >arith.h
++	rm -f a.out.js arithchk.o
+ 
+ check:
+ 	xsum Notice README abort_.c arithchk.c backspac.c c_abs.c c_cos.c \
+diff --git a/Makefile b/Makefile
+index f3598b7..70871db 100644
+--- a/Makefile
++++ b/Makefile
+@@ -7,7 +7,7 @@
+ include make.inc
+ 
+ all: f2clib cblaswrap lib
+-#all: f2clib lapack_install lib lapack_testing blas_testing variants_testing
++#all: f2clib lapack_install_test lib lapack_testing blas_testing variants_testing
+ 
+ #lib: lapacklib tmglib
+ #lib: f2clib lapacklib tmglib
+@@ -15,7 +15,10 @@ lib: f2clib blaslib lapacklib
+ 
+ clean: cleanlib cleantesting cleanblas_testing 
+ 
+-lapack_install:
++lapack_install_libs:
++	( cd INSTALL; $(MAKE) slamch.o second.o dlamch.o dsecnd.o ilaver.o lsame.o )
++
++lapack_install_test:
+ 	( cd INSTALL; $(MAKE); ./testlsame; ./testslamch; \
+ 	  ./testdlamch; ./testsecond; ./testdsecnd; ./testversion )
+ 
+@@ -28,7 +31,7 @@ cblaswrap:
+ fblaswrap: 
+ 	( cd BLAS/WRAP; $(MAKE) libfblaswr.a; cp libfblaswr.a ../.. )
+ 
+-lapacklib:
++lapacklib: lapack_install_libs
+ 	( cd SRC; $(MAKE) )
+ 
+ variants:

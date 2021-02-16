@@ -1,0 +1,3 @@
+[submodule "vosk"]
+	path = vosk
+	url = https://github.com/alphacep/vosk-api.git
