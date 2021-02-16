@@ -299,8 +299,7 @@ var VoskJS = (function() {
                 })
                 .then(() => {
                     this._model = new this._Vosk.Model(modelPath)
-                    this._model.SetAllowDownsample(true)
-                    console.debug(`RecognizerWorker: new Model(), SampleFrequency=${this._model.SampleFrequency()}`)
+                    console.debug(`RecognizerWorker: new Model()`)
                 })
                 .then(() => {
                     return true

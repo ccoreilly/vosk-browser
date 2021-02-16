@@ -44,6 +44,7 @@ LIBS = \
 	${KALDI_ROOT}/src/hmm/kaldi-hmm.bc \
 	${KALDI_ROOT}/src/ivector/kaldi-ivector.bc \
 	${KALDI_ROOT}/src/lat/kaldi-lat.bc \
+	${KALDI_ROOT}/src/lm/kaldi-lm.bc \
 	${KALDI_ROOT}/src/matrix/kaldi-matrix.bc \
 	${KALDI_ROOT}/src/nnet3/kaldi-nnet3.bc \
 	${KALDI_ROOT}/src/online2/kaldi-online2.bc \
@@ -63,9 +64,11 @@ SRC = \
 	$(SRC_ROOT)/utils.cc \
 	$(VOSK_ROOT)/src/kaldi_recognizer.cc \
 	$(VOSK_ROOT)/src/model.cc \
-	$(VOSK_ROOT)/src/spk_model.cc
+	$(VOSK_ROOT)/src/spk_model.cc \
+	$(VOSK_ROOT)/src/vosk_api.cc \
+	$(VOSK_ROOT)/src/language_model.cc 
 
-all: dist example
+all: dist
 
 dist: $(DESTDIR)/dist/vosk.js
 

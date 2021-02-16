@@ -46,8 +46,8 @@ void ArchiveHelper::Extract(const std::string &archive_path, const std::string &
         int r;
 
         /* Select which attributes we want to restore. */
-        flags = ARCHIVE_EXTRACT_TIME;
-        flags |= ARCHIVE_EXTRACT_PERM;
+        // flags = ARCHIVE_EXTRACT_TIME;
+        flags = ARCHIVE_EXTRACT_PERM;
         flags |= ARCHIVE_EXTRACT_ACL;
         flags |= ARCHIVE_EXTRACT_FFLAGS;
 

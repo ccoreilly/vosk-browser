@@ -45,7 +45,7 @@ RUN emmake make install
 RUN rm -rf /tmp/zlib
 
 WORKDIR /tmp/libarchive
-RUN curl --fail -q -L http://www.libarchive.org/downloads/libarchive-3.4.2.tar.gz | \
+RUN curl --fail -q -L http://www.libarchive.org/downloads/libarchive-3.5.1.tar.gz | \
     tar xz --strip-components=1
 RUN emconfigure ./configure CPPFLAGS=-I/opt/include LDFLAGS=-L/opt/lib --with-sysroot=/opt --prefix=/opt
 RUN emmake make -j $(nproc)
