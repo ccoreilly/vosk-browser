@@ -1,48 +1,5 @@
-diff --git a/.gitignore b/.gitignore
-index 267fdc91f..9a5bf83ba 100644
---- a/.gitignore
-+++ b/.gitignore
-@@ -29,6 +29,13 @@ core
- *.a
- *.lib
- 
-+# WebAssembly artifacts
-+*.bc
-+/src/probe/*.js
-+/src/probe/*.wasm
-+/src/probe/*.wasm.map
-+/src/probe/*.wast
-+
- # Test log files
- *.testlog
- 
-@@ -84,6 +91,7 @@ GSYMS
- /tools/pocolm/
- /tools/ATLAS/
- /tools/atlas3.8.3.tar.gz
-+/tools/gsl
- /tools/irstlm/
- /tools/mitlm/
- /tools/openfst
-@@ -106,7 +114,7 @@ GSYMS
- /tools/openfst-1.6.5.tar.gz
- /tools/openfst-1.6.5/
- /tools/openfst-1.6.7.tar.gz
--/tools/openfst-1.6.7/
-+/tools/openfst-1.6.7
- /tools/BeamformIt/
- /tools/libsndfile-1.0.25.tar.gz
- /tools/libsndfile-1.0.25/
-@@ -127,6 +135,7 @@ GSYMS
- /tools/sctk-2.4.8
- /tools/srilm
- /tools/CLAPACK_include
-+/tools/CLAPACK-WA
- /tools/kaldi_lm
- /tools/env.sh
- /tools/g2p-r1668.tar.gz
 diff --git a/src/Makefile b/src/Makefile
-index 07b7947f3..e15879fd7 100644
+index c50810297..4eb626551 100644
 --- a/src/Makefile
 +++ b/src/Makefile
 @@ -31,7 +31,7 @@ include kaldi.mk
@@ -50,23 +7,23 @@ index 07b7947f3..e15879fd7 100644
  # Reset the default goal, so that the all target will become default
  .DEFAULT_GOAL :=
 -all: $(SUBDIRS) matrix/test
-+all: $(SUBDIRS) # matrix/test
++all: $(SUBDIRS) #matrix/test
  	-echo Done
  
  mklibdir:
 diff --git a/src/configure b/src/configure
-index 1186c6d12..416347e2d 100755
+index d6079d8a0..1e09d5e13 100755
 --- a/src/configure
 +++ b/src/configure
-@@ -88,6 +88,7 @@ Configuration options:
+@@ -86,6 +86,7 @@ Configuration options:
    --atlas-root=DIR      ATLAS root directory [default=../tools/ATLAS/]
    --openblas-root=DIR   OpenBLAS root directory
    --clapack-root=DIR    CLAPACK root directory
 +  --gsl-root=DIR        GSL root directory
    --mkl-root=DIR        MKL root directory
    --mkl-libdir=DIR      MKL library directory
-   --mkl-threading=LIB   MKL threading layer [default=sequential]
-@@ -865,6 +866,9 @@ do
+   --omp-libdir=DIR      OpenMP directory
+@@ -691,6 +692,9 @@ do
    --clapack-root=*)
      GetSwitchExistingPathOrDie CLAPACKROOT "$1"
      shift ;;
@@ -76,10 +33,10 @@ index 1186c6d12..416347e2d 100755
    --openblas-root=*)
      GetSwitchExistingPathOrDie OPENBLASROOT "$1"
      shift ;;
-@@ -1136,6 +1140,48 @@ if $android ; then
+@@ -958,6 +962,47 @@ if $android ; then
+   cat makefiles/android_openblas.mk >> kaldi.mk
  
    echo "Successfully configured for Android with OpenBLAS from $OPENBLASROOT."
- 
 +elif [ "$(basename $CC)" == "emcc" ]; then
 +  # emscripten (WebAssembly)
 +
@@ -121,10 +78,9 @@ index 1186c6d12..416347e2d 100755
 +  cat makefiles/wasm_clapack.mk >> kaldi.mk
 +  echo "Warning (CLAPACK): this part of the configure process is not properly tested and may not work."
 +  echo "Successfully configured for WebAssembly with CLAPACK libs from $CLAPACKROOT"
-+
+ 
  elif [ "`uname`" == "Darwin" ]; then
    # Check for Darwin first, because we later call uname -o (for Cygwin)
-   # which crashes on Darwin.
 diff --git a/src/ivector/ivector-extractor.cc b/src/ivector/ivector-extractor.cc
 index c3a122281..1ad75599d 100644
 --- a/src/ivector/ivector-extractor.cc
@@ -151,7 +107,7 @@ index c3a122281..1ad75599d 100644
    KALDI_LOG << "Done.";
  }
 diff --git a/src/makefiles/default_rules.mk b/src/makefiles/default_rules.mk
-index 14989e8af..8ce978e7f 100644
+index 42d4e9d12..de11a1913 100644
 --- a/src/makefiles/default_rules.mk
 +++ b/src/makefiles/default_rules.mk
 @@ -1,6 +1,10 @@
@@ -177,7 +133,7 @@ index 14989e8af..8ce978e7f 100644
  else
    ifdef LIBNAME
      LIBFILE = $(LIBNAME).a
-@@ -33,14 +42,23 @@ else
+@@ -33,14 +42,22 @@ else
    XDEPENDS = $(ADDLIBS)
  endif
  
@@ -185,8 +141,8 @@ index 14989e8af..8ce978e7f 100644
 +all: $(LIBFILE)
 +else
  all: $(LIBFILE) $(BINFILES)
+-
 +endif
- 
  
  ifdef LIBNAME
  
@@ -201,7 +157,7 @@ index 14989e8af..8ce978e7f 100644
  
  ifeq ($(KALDI_FLAVOR), dynamic)
  # the LIBFILE is not the same as $(LIBNAME).a
-@@ -78,11 +96,14 @@ endif
+@@ -78,11 +95,14 @@ endif
  %.a:
  	$(MAKE) -C ${@D} ${@F}
  
@@ -212,14 +168,14 @@ index 14989e8af..8ce978e7f 100644
  	$(MAKE) -C ${@D} ${@F}
  
  clean:
--	-rm -f *.o *.a *.so $(TESTFILES) $(BINFILES) $(TESTOUTPUTS) tmp* *.tmp *.testlog
-+	-rm -f *.o *.a *.bc *.so $(TESTFILES) $(BINFILES) $(TESTOUTPUTS) tmp* *.tmp *.testlog
+-	-rm -f *.o *.a *.so *.dylib $(OBJFILES) $(TESTFILES) $(BINFILES) $(TESTOUTPUTS) tmp* *.tmp *.testlog
++	-rm -f *.o *.a *.bc *.so *.dylib $(OBJFILES) $(TESTFILES) $(BINFILES) $(TESTOUTPUTS) tmp* *.tmp *.testlog
  
  distclean: clean
  	-rm -f .depend.mk
 diff --git a/src/makefiles/wasm_clapack.mk b/src/makefiles/wasm_clapack.mk
 new file mode 100644
-index 000000000..f49b30f2b
+index 000000000..04207509c
 --- /dev/null
 +++ b/src/makefiles/wasm_clapack.mk
 @@ -0,0 +1,32 @@
@@ -255,23 +211,25 @@ index 000000000..f49b30f2b
 +
 +LDFLAGS = $(EXTRA_LDFLAGS) $(OPENFSTLDFLAGS) -g
 +LDLIBS = $(EXTRA_LDLIBS) $(OPENFSTLIBS) $(CLAPACKLIBS) -lm # -lpthread -ldl
+\ No newline at end of file
 diff --git a/tools/extras/check_dependencies.sh b/tools/extras/check_dependencies.sh
-index 6c7343697..e14090f05 100755
+index 155a376b6..1acc1f31c 100755
 --- a/tools/extras/check_dependencies.sh
 +++ b/tools/extras/check_dependencies.sh
-@@ -59,7 +59,7 @@ case $compiler_ver_info in
+@@ -60,7 +60,7 @@ case $compiler_ver_info in
  esac
  
  # Cannot check this without a compiler.
--if have "$CXX" && ! echo "#include <zlib.h>" | $CXX -E - >&/dev/null; then
-+if have "$CXX" && ! $CXX -I/usr/include -E "$(dirname $0)/zlib_test.h" >&/dev/null; then
+-if have "$CXX" && ! echo "#include <zlib.h>" | $CXX $CXXFLAGS -E - &>/dev/null; then
++if have "$CXX" && ! $CXX $CXXFLAGS -I/usr/include -E "$(dirname $0)/zlib_test.h" >&/dev/null; then
    echo "$0: zlib is not installed."
    add_packages zlib-devel zlib1g-dev
  fi
 diff --git a/tools/extras/zlib_test.h b/tools/extras/zlib_test.h
 new file mode 100644
-index 000000000..4470a1fd4
+index 000000000..7af470919
 --- /dev/null
 +++ b/tools/extras/zlib_test.h
 @@ -0,0 +1 @@
 +#include <zlib.h>
+\ No newline at end of file

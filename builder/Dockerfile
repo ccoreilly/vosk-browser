@@ -9,13 +9,14 @@ RUN apt-get update \
     libc6-dev-i386
 
 WORKDIR /opt/kaldi
-RUN git clone https://github.com/kaldi-asr/kaldi . \
-    && git checkout 31b0f0861
+RUN git clone -b lookahead-1.8.0 --single-branch https://github.com/alphacep/kaldi . && \
+    git checkout 75ecaef39
 ADD kaldi.patch /tmp
 RUN git apply -v /tmp/kaldi.patch
 
 WORKDIR /opt/kaldi/tools
 RUN extras/check_dependencies.sh
+ENV ZLIBDIR=/usr/lib/x86_64-linux-gnu/ OPENFST_VERSION=1.6.7
 RUN emmake make -j $(nproc) CXXFLAGS=-O3 LDFLAGS=-O3 openfst OPENFST_CONFIGURE="--enable-static --disable-shared --enable-far --enable-ngram-fsts --enable-lookahead-fsts --with-pic"
 RUN find . -type f -path '*/.libs/*.a' -exec sh -xc 'mv {} $(dirname {})/..' \;
 
