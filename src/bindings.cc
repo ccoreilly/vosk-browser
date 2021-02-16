@@ -1,4 +1,5 @@
 // Copyright 2020 Denis Treskunov
+// Copyright 2021 Ciaran O'Reilly
 
 #include <emscripten/bind.h>
 #include "utils.h"
@@ -7,6 +8,13 @@
 #include "../vosk/src/spk_model.h"
 
 using namespace emscripten;
+
+namespace emscripten {
+    namespace internal {
+        template<> void raw_destructor<Model>(Model* ptr) { /* do nothing */ }
+        template<> void raw_destructor<SpkModel>(SpkModel* ptr) { /* do nothing */ }
+    }
+}
 
 struct ArchiveHelperWrapper : public wrapper<ArchiveHelper> {
     EMSCRIPTEN_WRAPPER(ArchiveHelperWrapper);
@@ -33,6 +41,27 @@ static bool KaldiRecognizer_AcceptWaveform(KaldiRecognizer &self, long jsHeapAdd
     return self.KaldiRecognizer::AcceptWaveform(fdata, len);
 }
 
+static string KaldiRecognizer_Result(KaldiRecognizer &self) {
+    std::string s;
+    s += self.KaldiRecognizer::Result();
+    
+    return s;
+}
+
+static string KaldiRecognizer_FinalResult(KaldiRecognizer &self) {
+    std::string s;
+    s += self.KaldiRecognizer::FinalResult();
+    
+    return s;
+}
+
+static string KaldiRecognizer_PartialResult(KaldiRecognizer &self) {
+    std::string s;
+    s += self.KaldiRecognizer::PartialResult();
+    
+    return s;
+}
+
 EMSCRIPTEN_BINDINGS(vosk) {
     class_<ArchiveHelper>("ArchiveHelper")
         .function("Extract", &ArchiveHelper::Extract)
@@ -47,9 +76,6 @@ EMSCRIPTEN_BINDINGS(vosk) {
 
     class_<Model>("Model")
         .constructor(&makeModel, allow_raw_pointers())
-        .function("SampleFrequency", &Model::SampleFrequency)
-        .function("SetAllowDownsample", &Model::SetAllowDownsample)
-        .function("SetAllowUpsample", &Model::SetAllowUpsample)
         ;
 
     class_<SpkModel>("SpkModel")
@@ -57,10 +83,10 @@ EMSCRIPTEN_BINDINGS(vosk) {
         ;
 
     class_<KaldiRecognizer>("KaldiRecognizer")
-        .constructor<Model &, float>()
+        .constructor<Model *, float>(allow_raw_pointers())
         .function("AcceptWaveform", &KaldiRecognizer_AcceptWaveform)
-        .function("Result", &KaldiRecognizer::Result)
-        .function("FinalResult", &KaldiRecognizer::FinalResult)
-        .function("PartialResult", &KaldiRecognizer::PartialResult)
+        .function("Result", &KaldiRecognizer_Result)
+        .function("FinalResult", &KaldiRecognizer_FinalResult)
+        .function("PartialResult", &KaldiRecognizer_PartialResult)
         ;    
 }
