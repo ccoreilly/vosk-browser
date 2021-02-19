@@ -165,7 +165,6 @@
     Object.assign(Module, {
         'FS': FS,
         'MEMFS': MEMFS,
-        'NODEFS': NODEFS,
         'IDBFS': IDBFS,
         'WORKERFS': WORKERFS,
         'downloadAndExtract': downloadAndExtract,

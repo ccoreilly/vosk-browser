@@ -1,0 +1,15 @@
+{
+  "name": "vosk-wasm",
+  "version": "0.0.1",
+  "description": "WebAssembly build of the Vosk library",
+  "main": "./vosk.js",
+  "keywords": [
+    "kaldi",
+    "vosk",
+    "wasm",
+    "asr",
+    "stt"
+  ],
+  "author": "Ciaran O'Reilly",
+  "license": "Apache-2.0"
+}

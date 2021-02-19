@@ -22,7 +22,8 @@ LINK_FLAGS := \
 	-s ALLOW_MEMORY_GROWTH=1 \
 	-s ERROR_ON_UNDEFINED_SYMBOLS=0 \
 	-s MODULARIZE=1 \
-	-s EXPORT_NAME=LoadVosk
+	-s EXPORT_NAME=LoadVosk \
+	-s ENVIRONMENT=worker
 
 ifdef DEBUG
 DESTDIR ?= ${DST_ROOT}/build/debug
@@ -31,7 +32,7 @@ LINK_FLAGS += -O0 -g4 -s DEMANGLE_SUPPORT=1
 else
 DESTDIR ?= ${DST_ROOT}/build/release
 COMPILE_FLAGS += -O3
-LINK_FLAGS += -O3 # --closure 1 leads to "Failed to sync file system: Error: Unsupported data type"
+LINK_FLAGS += -O3 -s SINGLE_FILE=1 # --closure 1 leads to "Failed to sync file system: Error: Unsupported data type"
 endif
 
 LIBS = \
@@ -70,26 +71,24 @@ SRC = \
 
 all: dist
 
-dist: $(DESTDIR)/dist/vosk.js
+dist: $(DESTDIR)/vosk.js
+
+$(DESTDIR)/package.json: package.json
+	rsync -r $(notdir $@) $@
+	
+$(DESTDIR)/vosk.d.ts: vosk.d.ts
+	rsync -r $(notdir $@) $@
 
 $(DESTDIR)/vosk.bc: $(SRC)
 	mkdir -p $(dir $@)
 	$(CXX) -o $@ $(COMPILE_FLAGS) $(SRC)
 
-$(DESTDIR)/dist/vosk.js: $(DESTDIR)/vosk.bc vosk.pre.js vosk.post.js
+$(DESTDIR)/vosk.js: $(DESTDIR)/vosk.bc vosk.pre.js vosk.post.js $(DESTDIR)/package.json $(DESTDIR)/vosk.d.ts
 	mkdir -p $(dir $@)
 	cd $(dir $@); \
 	$(CXX) -o $(notdir $@) $(DESTDIR)/vosk.bc $(LINK_FLAGS) $(LIBS)
 
-$(DESTDIR)/example/model-en.tar.gz:
-	mkdir -p $(dir $@)
-	curl --fail -L -o $@ https://github.com/alphacep/kaldi-android-demo/releases/download/2020-01/alphacep-model-android-en-us-0.3.tar.gz
-
-example: dist $(DESTDIR)/example/model-en.tar.gz
-	rsync -r example/         $(DESTDIR)/example
-	rsync -r $(DESTDIR)/dist/ $(DESTDIR)/example
-
-# clean:
-# 	git clean -f -X .
+clean:
+	rm -rf ./build
 
 .PHONY: all dist
