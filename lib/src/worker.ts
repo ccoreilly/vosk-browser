@@ -1,49 +1,64 @@
-import LoadVosk, { Vosk } from "vosk-wasm";
+import LoadVosk, { Vosk, KaldiRecognizer, Model } from "vosk-wasm";
 
-import { ClientMessage } from "./interfaces";
+import { ClientMessage, ClientMessageAudioChunk } from "./interfaces";
 
 const ctx: Worker = self as any;
 
+export interface Recognizer {
+  id: string;
+  buffAddr?: number;
+  buffSize?: number;
+  kaldiRecognizer: KaldiRecognizer;
+}
 export class RecognizerWorker {
-  private Vosk!: Vosk;
+  private Vosk: Vosk;
+  private model: Model;
+  private recognizers = new Map<string, Recognizer>();
 
   constructor() {
+    ctx.addEventListener("message", (event) => this.handleMessage(event));
     this.initialize();
   }
 
   private initialize() {
-    console.log("initializing");
-    ctx.addEventListener("message", (event) => this.handleMessage(event));
     ctx.postMessage("ready");
-    console.log("initialized");
   }
 
   private handleMessage(event: MessageEvent<ClientMessage>) {
-    console.log(JSON.stringify(event.data));
-    let { method, params, messageId } = event.data;
-    try {
-      switch (method) {
-        case "load": {
-          if (params.length === 1 && typeof params[0] === "string") {
-            this.load(params[0])
-              .then((result) => {
-                ctx.postMessage({ messageId, result });
-              })
-              .catch((error) => ctx.postMessage({ messageId, error }));
-          } else {
-            ctx.postMessage({
-              error: "Missing 1 positional parameter: model URL",
-            });
-          }
-        }
+    const message = event.data;
+
+    if (ClientMessage.isLoadMessage(message)) {
+      console.debug(JSON.stringify(message));
+      const { modelUrl } = message;
+
+      if (!modelUrl) {
+        ctx.postMessage({
+          error: "Missing modelUrl parameter",
+        });
       }
-    } catch (error) {
-      ctx.postMessage({ error, messageId });
+
+      this.load(modelUrl)
+        .then((result) => {
+          ctx.postMessage({ event: "load", result });
+        })
+        .catch((error) => ctx.postMessage({ error }));
+
+      return;
     }
+
+    if (ClientMessage.isAudioChunkMessage(message)) {
+      this.processAudioChunk(message)
+        .then((result) => {
+          ctx.postMessage(result);
+        })
+        .catch((error) => ctx.postMessage({ event: "error", error }));
+      return;
+    }
+
+    ctx.postMessage({ error: `Unknown message ${JSON.stringify(message)}` });
   }
 
   private async load(modelUrl: string) {
-    console.log("here");
     const storagePath = "/vosk";
     const modelPath = storagePath + "/" + modelUrl.replace(/[\W]/g, "_");
     return new Promise((resolve, reject) =>
@@ -59,7 +74,7 @@ export class RecognizerWorker {
         return this.Vosk.syncFilesystem(true);
       })
       .then(() => {
-        console.log(location.href);
+        // TODO parse Url
         const fullModelUrl = new URL(
           modelUrl,
           location.href.replace(/^blob:/, "")
@@ -74,13 +89,83 @@ export class RecognizerWorker {
       })
       .then(() => {
         console.debug(`Creating model`);
-        const model = new this.Vosk.Model(modelPath);
+        this.model = new this.Vosk.Model(modelPath);
         console.debug(`RecognizerWorker: new Model()`);
       })
       .then(() => {
         return true;
-      })
-      .catch(console.error);
+      });
+  }
+
+  private allocateBuffer(size: number, recognizer: Recognizer) {
+    if (recognizer.buffAddr != null && recognizer.buffSize === size) {
+      return;
+    }
+    this.freeBuffer(recognizer);
+    recognizer.buffAddr = this.Vosk._malloc(size);
+    recognizer.buffSize = size;
+    console.debug(
+      `Recognizer (id: ${recognizer.id}): allocated buffer of ${recognizer.buffSize} bytes`
+    );
+  }
+
+  private freeBuffer(recognizer: Recognizer) {
+    if (recognizer.buffAddr == null) {
+      return;
+    }
+    this.Vosk._free(recognizer.buffAddr);
+    console.debug(
+      `Recognizer (id: ${recognizer.id}): freed buffer of ${recognizer.buffSize} bytes`
+    );
+    recognizer.buffAddr = undefined;
+    recognizer.buffSize = undefined;
+  }
+
+  private async processAudioChunk({
+    recognizerId,
+    data,
+    sampleRate,
+  }: ClientMessageAudioChunk) {
+    if (!this.recognizers.has(recognizerId)) {
+      this.recognizers.set(recognizerId, {
+        id: recognizerId,
+        kaldiRecognizer: new this.Vosk.KaldiRecognizer(this.model, sampleRate),
+      });
+    }
+
+    const recognizer = this.recognizers.get(recognizerId)!;
+
+    const requiredSize = data.length * data.BYTES_PER_ELEMENT;
+    this.allocateBuffer(requiredSize, recognizer);
+    if (recognizer.buffAddr == null) {
+      return {
+        error: `Recognizer (id: ${recognizer.id}): Could not allocate buffer`,
+      };
+    }
+
+    this.Vosk.HEAPF32.set(data, recognizer.buffAddr / data.BYTES_PER_ELEMENT);
+    let json;
+    if (
+      recognizer.kaldiRecognizer.AcceptWaveform(
+        recognizer.buffAddr,
+        data.length
+      )
+    ) {
+      json = recognizer.kaldiRecognizer.Result();
+
+      return {
+        event: "result",
+        recognizerId: recognizer.id,
+        result: JSON.parse(json),
+      };
+    } else {
+      json = recognizer.kaldiRecognizer.PartialResult();
+      return {
+        event: "partialresult",
+        recognizerId: recognizer.id,
+        result: JSON.parse(json),
+      };
+    }
   }
 }
 
