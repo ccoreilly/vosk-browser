@@ -5,7 +5,6 @@ import styled from "styled-components";
 
 import { AudioStreamer } from "./audiostreamer";
 import { AudioBucket } from "./audiobucket";
-import { KaldiRecognizer, Model } from "vosk-browser";
 
 const MicButtonOn = styled(AudioOutlined)`
   color: "red";
@@ -36,7 +35,6 @@ interface Props {
 let micStream: any;
 
 const Microphone: React.FunctionComponent<Props> = ({ audioStreamer }) => {
-  console.log(`audioStreamer ${audioStreamer}`);
   const [muted, setMuted] = useState(true);
 
   const startRecognitionStream = useCallback(async () => {
