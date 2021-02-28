@@ -49,6 +49,8 @@ export interface ServerMessagePartialResult {
   };
 }
 
+export type ModelMessage = ServerMessageLoadResult | ServerMessageError;
+
 export type RecognizerMessage =
   | ServerMessagePartialResult
   | ServerMessageResult;
@@ -56,6 +58,7 @@ export type RecognizerMessage =
 export type RecognizerEvent = RecognizerMessage["event"];
 
 export type ServerMessage =
+  | ServerMessageLoadResult
   | ServerMessageError
   | ServerMessageResult
   | ServerMessagePartialResult;

@@ -5,9 +5,11 @@ import {
   ClientMessage,
   ClientMessageAudioChunk,
   ClientMessageLoad,
+  ModelMessage,
   RecognizerEvent,
   RecognizerMessage,
   ServerMessage,
+  ServerMessageLoadResult,
 } from "./interfaces";
 
 export class Model extends EventTarget {
@@ -45,6 +47,17 @@ export class Model extends EventTarget {
     this.dispatchEvent(new CustomEvent(message.event, { detail: message }));
   }
 
+  public on(
+    event: ModelMessage["event"],
+    listener: (message: ModelMessage) => void
+  ) {
+    this.addEventListener(event, (event: any) => {
+      if (event.detail && !ServerMessage.isRecognizerMessage(event.detail)) {
+        listener(event.detail);
+      }
+    });
+  }
+
   public get ready(): boolean {
     return this._ready;
   }
@@ -65,7 +78,6 @@ export class Model extends EventTarget {
         listener: (message: RecognizerMessage) => void
       ) {
         model.addEventListener(event, (event: any) => {
-          console.log(`Received event ${event}`);
           if (event.detail && ServerMessage.isRecognizerMessage(event.detail)) {
             listener(event.detail);
           }
@@ -105,3 +117,16 @@ export class Model extends EventTarget {
 }
 
 export type KaldiRecognizer = InstanceType<Model["KaldiRecognizer"]>;
+
+export async function createModel(modelUrl: string): Promise<Model> {
+  const model = new Model(modelUrl);
+
+  return new Promise((resolve, reject) =>
+    model.on("load", (message: any) => {
+      if (message.result) {
+        resolve(model);
+      }
+      reject();
+    })
+  );
+}

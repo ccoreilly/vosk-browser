@@ -17,11 +17,6 @@ export class RecognizerWorker {
 
   constructor() {
     ctx.addEventListener("message", (event) => this.handleMessage(event));
-    this.initialize();
-  }
-
-  private initialize() {
-    ctx.postMessage("ready");
   }
 
   private handleMessage(event: MessageEvent<ClientMessage>) {
