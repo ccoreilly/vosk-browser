@@ -2,8 +2,8 @@
   "name": "vosk-browser",
   "version": "0.0.1",
   "description": "Kaldi in-browser speech recognition based on a WASM build of the Vosk library",
-  "main": "./dist/index.js",
-  "module": "./dist/index.js",
+  "main": "./dist/vosk.js",
+  "module": "./dist/vosk.js",
   "scripts": {
     "build": "rollup -c",
     "clean": "rm -rf ./node_modules && rm -rf ./dist"
