@@ -4,7 +4,14 @@ import React, { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 
 import { AudioStreamer } from "./audiostreamer";
-import { AudioBucket } from "./audiobucket";
+import { audioBucket } from "./audiobucket";
+import { KaldiRecognizer } from "vosk-browser";
+
+const Loading = styled.span`
+  box-sizing: border-box;
+  padding: 0.2rem 0 0.2rem 0.5rem;
+  line-height: 3rem;
+`;
 
 const MicButtonOn = styled(AudioOutlined)`
   color: "red";
@@ -29,58 +36,79 @@ const MicButtonOff = styled(AudioMutedOutlined)`
 `;
 
 interface Props {
-  audioStreamer: AudioStreamer | undefined;
+  recognizer: KaldiRecognizer | undefined;
+  loading: boolean;
 }
 
 let micStream: any;
+let audioStreamer: AudioStreamer;
 
-const Microphone: React.FunctionComponent<Props> = ({ audioStreamer }) => {
+const Microphone: React.FunctionComponent<Props> = ({
+  recognizer,
+  loading,
+}) => {
   const [muted, setMuted] = useState(true);
 
   const startRecognitionStream = useCallback(async () => {
-    if (!micStream) {
-      let mediaStream = null;
-      try {
-        mediaStream = await navigator.mediaDevices.getUserMedia({
-          video: false,
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-          },
-        });
+    if (recognizer) {
+      setMuted(true);
 
-        micStream = new MicrophoneStream({
-          objectMode: true,
-          bufferSize: 1024,
-        });
+      if (!micStream) {
+        let mediaStream = null;
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia({
+            video: false,
+            audio: {
+              echoCancellation: true,
+              noiseSuppression: true,
+            },
+          });
 
-        micStream.setStream(mediaStream);
-      } catch (err) {
-        console.log(err);
+          micStream = new MicrophoneStream({
+            objectMode: true,
+            bufferSize: 1024,
+          });
+
+          micStream.setStream(mediaStream);
+        } catch (err) {
+          console.error(err);
+        }
+      } else {
+        micStream.unpipe(audioStreamer);
+        micStream.pipe(audioBucket);
       }
-    } else {
-      (micStream as any).unpipe(AudioBucket);
-    }
 
-    micStream.pipe(audioStreamer);
-  }, [muted, audioStreamer]);
+      audioStreamer = new AudioStreamer(recognizer, {
+        objectMode: true,
+      });
+    }
+  }, [recognizer]);
 
   useEffect(() => {
-    console.log("effect");
-    if (!muted && audioStreamer) {
-      console.log("start");
-      startRecognitionStream();
+    startRecognitionStream();
+  }, [recognizer]);
+
+  useEffect(() => {
+    setMuted(true);
+  }, [loading]);
+
+  useEffect(() => {
+    if (!muted) {
+      micStream?.unpipe(audioBucket);
+      micStream?.pipe(audioStreamer);
     } else {
-      if (micStream) {
-        micStream.unpipe(audioStreamer);
-        micStream.pipe(AudioBucket);
-      }
+      micStream?.unpipe(audioStreamer);
+      micStream?.pipe(audioBucket);
     }
-  }, [muted, audioStreamer]);
+  }, [muted]);
 
   const toggleMic = () => {
     setMuted((muted) => !muted);
   };
+
+  if (loading) {
+    return <Loading>Loading model...</Loading>;
+  }
 
   return muted ? (
     <MicButtonOff onMouseUp={toggleMic} />

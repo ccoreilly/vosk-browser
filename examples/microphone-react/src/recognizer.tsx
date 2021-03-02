@@ -1,25 +1,31 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 
-import { createModel } from "vosk-browser";
-import { AudioStreamer } from "./audiostreamer";
+import { createModel, KaldiRecognizer, Model } from "vosk-browser";
 import Microphone from "./microphone";
+import { ModelLoader, models } from "./model-loader";
 
 const Wrapper = styled.div`
-  width: 100%;
+  width: 80%;
+  text-align: left;
+  max-width: 700px;
+  margin: auto;
   display: flex;
   justify-content: center;
   flex-direction: column;
-  overflow: auto;
+`;
+
+const Header = styled.div`
+  display: flex;
+  justify-content: center;
 `;
 
 const ResultContainer = styled.div`
-  width: 80%;
-  max-width: 700px;
+  width: 100%;
   margin: 1rem auto;
   border: 1px solid #aaaaaa;
   padding: 1rem;
-  resize: both;
+  resize: vertical;
   overflow: auto;
 `;
 
@@ -41,15 +47,30 @@ interface VoskResult {
   text: string;
 }
 
+const modelMap = new Map<
+  string,
+  { model: Model; recognizer: KaldiRecognizer }
+>();
+
 export const Recognizer: React.FunctionComponent = () => {
   const [utterances, setUtterances] = useState<VoskResult[]>([]);
   const [partial, setPartial] = useState("");
-  const [audioStreamer, setAudioStreamer] = useState<AudioStreamer>();
+  const [recognizer, setRecognizer] = useState<KaldiRecognizer>();
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    (async () => {
-      const model = await createModel(process.env.PUBLIC_URL + "/model.tar.gz");
-      const recognizer = new model.KaldiRecognizer();
+  const loadModel = async (path: string) => {
+    setLoading(true);
+    let recognizer: KaldiRecognizer;
+
+    if (modelMap.has(path)) {
+      const existing = modelMap.get(path)!;
+      recognizer = existing.recognizer;
+    } else {
+      const model = await createModel(
+        process.env.PUBLIC_URL + "/models/" + path
+      );
+
+      recognizer = new model.KaldiRecognizer();
       recognizer.on("result", (message: any) => {
         const result: VoskResult = message.result;
         setUtterances((utt: VoskResult[]) => [...utt, result]);
@@ -58,14 +79,25 @@ export const Recognizer: React.FunctionComponent = () => {
       recognizer.on("partialresult", (message: any) => {
         setPartial(message.result.partial);
       });
+      modelMap.set(path, { model, recognizer });
+    }
 
-      setAudioStreamer(new AudioStreamer(recognizer, { objectMode: true }));
-    })();
+    setRecognizer(() => {
+      setLoading(false);
+      return recognizer;
+    });
+  };
+
+  useEffect(() => {
+    loadModel(models[4].path);
   }, []);
 
   return (
     <Wrapper>
-      <Microphone audioStreamer={audioStreamer} />
+      <Header>
+        <ModelLoader onModelChange={(path) => loadModel(path)} />
+        <Microphone recognizer={recognizer} loading={loading} />
+      </Header>
       <ResultContainer>
         {utterances.map((utt, uindex) =>
           utt?.result?.map((word, windex) => (
