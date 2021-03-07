@@ -1,5 +1,7 @@
 .*
 **/tsconfig.json
-**/webpack.config.js
+**/rollup.config.js
 node_modules
 src
+types
+dist/worker.d.ts

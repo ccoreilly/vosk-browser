@@ -1,6 +1,6 @@
 {
   "name": "vosk-browser",
-  "version": "0.0.1",
+  "version": "0.0.2-alpha",
   "description": "Kaldi in-browser speech recognition based on a WASM build of the Vosk library",
   "main": "./dist/vosk.js",
   "module": "./dist/vosk.js",
@@ -15,11 +15,14 @@
     "asr",
     "stt"
   ],
-  "author": "Ciaran O'Reilly",
+  "author": "Ciaran O'Reilly <ciaran@oreilly.cat>",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/ccoreilly/vosk-browser.git"
+  },
   "license": "Apache-2.0",
   "dependencies": {
-    "uuid": "^8.3.2",
-    "vosk-wasm": "../build/release"
+    "uuid": "8.3.2"
   },
   "devDependencies": {
     "@types/uuid": "^8.3.0",

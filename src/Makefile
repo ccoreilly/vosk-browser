@@ -2,6 +2,7 @@ MAKEFILE_ROOT := $(realpath $(dir $(firstword $(MAKEFILE_LIST))))
 SRC_ROOT := ${MAKEFILE_ROOT}
 VOSK_ROOT := ${MAKEFILE_ROOT}/../vosk
 DST_ROOT := ${MAKEFILE_ROOT}/..
+VOSK_BROWSER_ROOT := ${MAKEFILE_ROOT}/../lib/src
 KALDI_ROOT ?= /opt/kaldi
 
 # https://github.com/emscripten-core/emscripten/blob/master/src/settings.js
@@ -69,21 +70,23 @@ SRC = \
 	$(VOSK_ROOT)/src/vosk_api.cc \
 	$(VOSK_ROOT)/src/language_model.cc 
 
-all: dist
+all: dist sync-lib
 
 dist: $(DESTDIR)/vosk.js
 
-$(DESTDIR)/package.json: package.json
-	rsync -r $(notdir $@) $@
+sync-lib: $(VOSK_BROWSER_ROOT)/vosk-wasm.js $(VOSK_BROWSER_ROOT)/vosk-wasm.d.ts
+
+$(VOSK_BROWSER_ROOT)/vosk-wasm.js: $(DESTDIR)/vosk.js
+	rsync -r $(DESTDIR)/vosk.js $@
 	
-$(DESTDIR)/vosk.d.ts: vosk.d.ts
-	rsync -r $(notdir $@) $@
+$(VOSK_BROWSER_ROOT)/vosk-wasm.d.ts: vosk.d.ts
+	rsync -r vosk.d.ts $@
 
 $(DESTDIR)/vosk.bc: $(SRC)
 	mkdir -p $(dir $@)
 	$(CXX) -o $@ $(COMPILE_FLAGS) $(SRC)
 
-$(DESTDIR)/vosk.js: $(DESTDIR)/vosk.bc vosk.pre.js vosk.post.js $(DESTDIR)/package.json $(DESTDIR)/vosk.d.ts
+$(DESTDIR)/vosk.js: $(DESTDIR)/vosk.bc vosk.pre.js vosk.post.js
 	mkdir -p $(dir $@)
 	cd $(dir $@); \
 	$(CXX) -o $(notdir $@) $(DESTDIR)/vosk.bc $(LINK_FLAGS) $(LIBS)

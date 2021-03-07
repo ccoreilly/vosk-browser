@@ -1,4 +1,4 @@
-import LoadVosk, { Vosk, KaldiRecognizer, Model } from "vosk-wasm";
+import LoadVosk, { Vosk, KaldiRecognizer, Model } from "./vosk-wasm";
 
 import { ClientMessage, ClientMessageAudioChunk } from "./interfaces";
 
