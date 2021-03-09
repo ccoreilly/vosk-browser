@@ -15,6 +15,7 @@ const StyledButton = styled(Button)`
 `;
 interface Props {
   onModelChange: (value: string) => void;
+  onModelSelect: (value: string) => void;
   loading: boolean;
 }
 
@@ -75,6 +76,7 @@ export const models: Array<{ name: string; path: string }> = [
 
 const ModelLoader: React.FunctionComponent<Props> = ({
   onModelChange,
+  onModelSelect,
   loading,
 }) => {
   const [model, setModel] = useState(models[4].path);
@@ -88,7 +90,10 @@ const ModelLoader: React.FunctionComponent<Props> = ({
           width: "10rem",
         }}
         defaultValue={models[4].path}
-        onChange={(value: string) => setModel(value)}
+        onChange={(value: string) => {
+          onModelChange(value);
+          setModel(value);
+        }}
       >
         {models.map((model, index) => (
           <Option value={model.path} key={index}>
@@ -96,7 +101,7 @@ const ModelLoader: React.FunctionComponent<Props> = ({
           </Option>
         ))}
       </Select>
-      <StyledButton onClick={() => onModelChange(model)}>
+      <StyledButton onClick={() => onModelSelect(model)}>
         {loading ? "Loading..." : "Load"}
       </StyledButton>
     </Wrapper>

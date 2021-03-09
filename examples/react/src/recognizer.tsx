@@ -49,41 +49,35 @@ interface VoskResult {
   text: string;
 }
 
-const modelMap = new Map<
-  string,
-  { model: Model; recognizer: KaldiRecognizer }
->();
+const modelMap = new Map<string, { model: Model; path: string }>();
 
 export const Recognizer: React.FunctionComponent = () => {
   const [utterances, setUtterances] = useState<VoskResult[]>([]);
   const [partial, setPartial] = useState("");
+  const [loadedModel, setLoadedModel] = useState<{
+    model: Model;
+    path: string;
+  }>();
   const [recognizer, setRecognizer] = useState<KaldiRecognizer>();
   const [loading, setLoading] = useState(false);
   const [ready, setReady] = useState(false);
 
   const loadModel = async (path: string) => {
     setLoading(true);
-    let recognizer: KaldiRecognizer;
+    loadedModel?.model.terminate();
 
-    if (modelMap.has(path)) {
-      const existing = modelMap.get(path)!;
-      recognizer = existing.recognizer;
-    } else {
-      const model = await createModel(
-        process.env.PUBLIC_URL + "/models/" + path
-      );
+    const model = await createModel(process.env.PUBLIC_URL + "/models/" + path);
 
-      recognizer = new model.KaldiRecognizer();
-      recognizer.on("result", (message: any) => {
-        const result: VoskResult = message.result;
-        setUtterances((utt: VoskResult[]) => [...utt, result]);
-      });
+    setLoadedModel({ model, path });
+    const recognizer = new model.KaldiRecognizer();
+    recognizer.on("result", (message: any) => {
+      const result: VoskResult = message.result;
+      setUtterances((utt: VoskResult[]) => [...utt, result]);
+    });
 
-      recognizer.on("partialresult", (message: any) => {
-        setPartial(message.result.partial);
-      });
-      modelMap.set(path, { model, recognizer });
-    }
+    recognizer.on("partialresult", (message: any) => {
+      setPartial(message.result.partial);
+    });
 
     setRecognizer(() => {
       setLoading(false);
@@ -95,7 +89,12 @@ export const Recognizer: React.FunctionComponent = () => {
   return (
     <Wrapper>
       <ModelLoader
-        onModelChange={(path) => loadModel(path)}
+        onModelChange={(path) => setReady(loadedModel?.path === path)}
+        onModelSelect={(path) => {
+          if (loadedModel?.path !== path) {
+            loadModel(path);
+          }
+        }}
         loading={loading}
       />
       <Header>
