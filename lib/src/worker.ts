@@ -50,10 +50,23 @@ export class RecognizerWorker {
       return;
     }
 
+    if (ClientMessage.isRecognizerRemoveMessage(message)) {
+      this.removeRecognizer(message.recognizerId)
+        .then((result) => {
+          ctx.postMessage(result);
+        })
+        .catch((error) => ctx.postMessage({ event: "error", error }));
+      return;
+    }
+
+    if (ClientMessage.isTerminateMessage(message)) {
+      this.terminate();
+    }
+
     ctx.postMessage({ error: `Unknown message ${JSON.stringify(message)}` });
   }
 
-  private async load(modelUrl: string) {
+  private async load(modelUrl: string): Promise<boolean> {
     const storagePath = "/vosk";
     const modelPath = storagePath + "/" + modelUrl.replace(/[\W]/g, "_");
     return new Promise((resolve, reject) =>
@@ -161,6 +174,34 @@ export class RecognizerWorker {
         result: JSON.parse(json),
       };
     }
+  }
+
+  private async removeRecognizer(recognizerId: string) {
+    if (!this.recognizers.has(recognizerId)) {
+      throw new Error(
+        `Recognizer (id: ${recognizerId}): Does not exist or has already been deleted`
+      );
+    }
+
+    const recognizer = this.recognizers.get(recognizerId)!;
+    const finalResult = recognizer.kaldiRecognizer.FinalResult();
+    this.freeBuffer(recognizer);
+    recognizer.kaldiRecognizer.delete();
+    this.recognizers.delete(recognizerId);
+
+    return {
+      event: "result",
+      recognizerId,
+      result: JSON.parse(finalResult),
+    };
+  }
+
+  private async terminate() {
+    for (const recognizer of this.recognizers.values()) {
+      await this.removeRecognizer(recognizer.id);
+    }
+    this.model.delete();
+    close();
   }
 }
 

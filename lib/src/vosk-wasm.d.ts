@@ -1,5 +1,6 @@
 export declare class Model {
   constructor(path: string);
+  public delete(): void;
 }
 
 export declare class KaldiRecognizer {
@@ -7,6 +8,8 @@ export declare class KaldiRecognizer {
   public AcceptWaveform(address: number, length: number): boolean;
   public Result(): string;
   public PartialResult(): string;
+  public FinalResult(): string;
+  public delete(): void;
 }
 export declare interface Vosk {
   FS: {

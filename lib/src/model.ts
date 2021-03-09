@@ -4,7 +4,9 @@ import WebWorker from "web-worker:./worker.ts";
 import {
   ClientMessage,
   ClientMessageAudioChunk,
+  ClientMessageTerminate,
   ClientMessageLoad,
+  ClientMessageRemoveRecognizer,
   ModelMessage,
   RecognizerEvent,
   RecognizerMessage,
@@ -14,7 +16,7 @@ import {
 
 export class Model extends EventTarget {
   private worker: Worker;
-  private _ready: boolean;
+  private _ready: boolean = false;
 
   constructor(private modelUrl: string) {
     super();
@@ -41,8 +43,11 @@ export class Model extends EventTarget {
   }
 
   private handleMessage(event: MessageEvent<ServerMessage>) {
-    console.debug(JSON.stringify(event.data));
     const message = event.data;
+
+    if (ModelMessage.isLoadResult(message)) {
+      this._ready = message.result;
+    }
 
     this.dispatchEvent(new CustomEvent(message.event, { detail: message }));
   }
@@ -62,6 +67,13 @@ export class Model extends EventTarget {
     return this._ready;
   }
 
+  public terminate(): void {
+    this.postMessage<ClientMessageTerminate>({
+      action: "terminate",
+    });
+    this._ready = false;
+  }
+
   /**
    * KaldiRecognizer anonymous class
    */
@@ -71,6 +83,11 @@ export class Model extends EventTarget {
       public id = uuid();
       constructor() {
         super();
+        if (!model.ready) {
+          throw new Error(
+            "Cannot create KaldiRecognizer. Model is either not ready or has been terminated"
+          );
+        }
       }
 
       public on(
@@ -111,6 +128,13 @@ export class Model extends EventTarget {
             transfer: [data.buffer],
           }
         );
+      }
+
+      public remove(): void {
+        model.postMessage<ClientMessageRemoveRecognizer>({
+          action: "remove",
+          recognizerId: this.id,
+        });
       }
     };
   }

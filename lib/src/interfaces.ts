@@ -3,6 +3,10 @@ export interface ClientMessageLoad {
   modelUrl: string;
 }
 
+export interface ClientMessageTerminate {
+  action: "terminate";
+}
+
 export interface ClientMessageAudioChunk {
   action: "audioChunk";
   recognizerId: string;
@@ -10,9 +14,24 @@ export interface ClientMessageAudioChunk {
   sampleRate: number;
 }
 
-export type ClientMessage = ClientMessageLoad | ClientMessageAudioChunk;
+export interface ClientMessageRemoveRecognizer {
+  action: "remove";
+  recognizerId: string;
+}
+
+export type ClientMessage =
+  | ClientMessageTerminate
+  | ClientMessageLoad
+  | ClientMessageAudioChunk
+  | ClientMessageRemoveRecognizer;
 
 export namespace ClientMessage {
+  export function isTerminateMessage(
+    message: ClientMessage
+  ): message is ClientMessageTerminate {
+    return message.action === "terminate";
+  }
+
   export function isLoadMessage(
     message: ClientMessage
   ): message is ClientMessageLoad {
@@ -23,6 +42,12 @@ export namespace ClientMessage {
     message: ClientMessage
   ): message is ClientMessageAudioChunk {
     return message.action === "audioChunk";
+  }
+
+  export function isRecognizerRemoveMessage(
+    message: ClientMessage
+  ): message is ClientMessageRemoveRecognizer {
+    return message.action === "remove";
   }
 }
 
@@ -51,6 +76,13 @@ export interface ServerMessagePartialResult {
 
 export type ModelMessage = ServerMessageLoadResult | ServerMessageError;
 
+export namespace ModelMessage {
+  export function isLoadResult(
+    message: any
+  ): message is ServerMessageLoadResult {
+    return message?.event === "load";
+  }
+}
 export type RecognizerMessage =
   | ServerMessagePartialResult
   | ServerMessageResult;
