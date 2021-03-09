@@ -1,10 +1,21 @@
-import { Select } from "antd";
-import React from "react";
+import { Button, Select } from "antd";
+import React, { useState } from "react";
+import styled from "styled-components";
 
 const { Option } = Select;
 
+const Wrapper = styled.div`
+  display: flex;
+  justify-content: center;
+`;
+
+const StyledButton = styled(Button)`
+  box-sizing: border-box;
+  margin-left: 0.5rem;
+`;
 interface Props {
   onModelChange: (value: string) => void;
+  loading: boolean;
 }
 
 export const models: Array<{ name: string; path: string }> = [
@@ -62,24 +73,34 @@ export const models: Array<{ name: string; path: string }> = [
   },
 ];
 
-export const ModelLoader: React.FunctionComponent<Props> = ({
+const ModelLoader: React.FunctionComponent<Props> = ({
   onModelChange,
+  loading,
 }) => {
+  const [model, setModel] = useState(models[4].path);
+
   return (
-    <Select
-      style={{
-        height: "2rem",
-        margin: "auto 0",
-        width: "10rem",
-      }}
-      defaultValue={models[4].path}
-      onChange={onModelChange}
-    >
-      {models.map((model, index) => (
-        <Option value={model.path} key={index}>
-          {model.name}
-        </Option>
-      ))}
-    </Select>
+    <Wrapper>
+      <Select
+        style={{
+          height: "2rem",
+          margin: "auto 0",
+          width: "10rem",
+        }}
+        defaultValue={models[4].path}
+        onChange={(value: string) => setModel(value)}
+      >
+        {models.map((model, index) => (
+          <Option value={model.path} key={index}>
+            {model.name}
+          </Option>
+        ))}
+      </Select>
+      <StyledButton onClick={() => onModelChange(model)}>
+        {loading ? "Loading..." : "Load"}
+      </StyledButton>
+    </Wrapper>
   );
 };
+
+export default ModelLoader;

@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 
 import { createModel, KaldiRecognizer, Model } from "vosk-browser";
+import FileUpload from "./file-upload";
 import Microphone from "./microphone";
-import { ModelLoader, models } from "./model-loader";
+import ModelLoader from "./model-loader";
 
 const Wrapper = styled.div`
   width: 80%;
@@ -18,6 +19,7 @@ const Wrapper = styled.div`
 const Header = styled.div`
   display: flex;
   justify-content: center;
+  margin: 1rem auto;
 `;
 
 const ResultContainer = styled.div`
@@ -56,7 +58,8 @@ export const Recognizer: React.FunctionComponent = () => {
   const [utterances, setUtterances] = useState<VoskResult[]>([]);
   const [partial, setPartial] = useState("");
   const [recognizer, setRecognizer] = useState<KaldiRecognizer>();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [ready, setReady] = useState(false);
 
   const loadModel = async (path: string) => {
     setLoading(true);
@@ -84,19 +87,20 @@ export const Recognizer: React.FunctionComponent = () => {
 
     setRecognizer(() => {
       setLoading(false);
+      setReady(true);
       return recognizer;
     });
   };
 
-  useEffect(() => {
-    loadModel(models[4].path);
-  }, []);
-
   return (
     <Wrapper>
+      <ModelLoader
+        onModelChange={(path) => loadModel(path)}
+        loading={loading}
+      />
       <Header>
-        <ModelLoader onModelChange={(path) => loadModel(path)} />
-        <Microphone recognizer={recognizer} loading={loading} />
+        <Microphone recognizer={recognizer} loading={loading} ready={ready} />
+        <FileUpload recognizer={recognizer} loading={loading} ready={ready} />
       </Header>
       <ResultContainer>
         {utterances.map((utt, uindex) =>
