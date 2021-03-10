@@ -17,12 +17,17 @@ const Wrapper = styled.div`
 ReactDOM.render(
   <React.StrictMode>
     <Wrapper>
-      <h1>Vosk-Browser Demo</h1>
+      <h1>Vosk-Browser Speech Recognition Demo</h1>
       <p>
         Select a language and load the model to start speech recognition. <br />
         You can either upload a file or speak on the microphone.
       </p>
       <Recognizer />
+      <p>
+        <a href="https://github.com/ccoreilly/vosk-browser">
+          Github Repository
+        </a>
+      </p>
     </Wrapper>
   </React.StrictMode>,
   document.getElementById("root")
