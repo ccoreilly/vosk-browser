@@ -24,7 +24,6 @@ const FileUpload: React.FunctionComponent<Props> = ({
 
   const onChange = ({ file }: any) => {
     if (recognizer && audioRef.current) {
-      console.log(JSON.stringify(file, undefined, 2));
       const fileUrl = URL.createObjectURL(file.originFileObj);
       const audioPlayer = audioRef.current;
       audioPlayer.src = fileUrl;
@@ -38,7 +37,6 @@ const FileUpload: React.FunctionComponent<Props> = ({
             audioPlayer.currentTime < audioPlayer.duration &&
             !audioPlayer.paused
           ) {
-            console.log(event.inputBuffer);
             recognizer.acceptWaveform(event.inputBuffer);
           }
         } catch (error) {
