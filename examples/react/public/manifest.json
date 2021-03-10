@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Vosk Browser Microphone Demo",
+  "short_name": "Vosk-Browser",
+  "name": "Vosk-Browser Speech Recognition Demo",
   "icons": [
     {
       "src": "favicon.ico",
