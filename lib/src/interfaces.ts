@@ -64,6 +64,12 @@ export interface ServerMessageError {
 export interface ServerMessageResult {
   event: "result";
   result: {
+    result: Array<{
+      conf: number;
+      start: number;
+      end: number;
+      word: string;
+    }>;
     text: string;
   };
 }
@@ -89,11 +95,7 @@ export type RecognizerMessage =
 
 export type RecognizerEvent = RecognizerMessage["event"];
 
-export type ServerMessage =
-  | ServerMessageLoadResult
-  | ServerMessageError
-  | ServerMessageResult
-  | ServerMessagePartialResult;
+export type ServerMessage = ModelMessage | RecognizerMessage;
 
 export namespace ServerMessage {
   export function isRecognizerMessage(message: ServerMessage): boolean {
