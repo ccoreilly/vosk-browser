@@ -25,8 +25,14 @@ ReactDOM.render(
       <Recognizer />
       <p>
         <a href="https://github.com/ccoreilly/vosk-browser">
-          Github Repository
+          Vosk-Browser Github Repository
         </a>
+      </p>
+      <p>
+        All models are Copyright 2019{" "}
+        <a href="https://alphacephei.com/en/">Alpha Cephei</a> Inc. All Rights
+        Reserved. <a href="https://alphacephei.com/vosk/models">Distributed</a>{" "}
+        under Apache 2.0 license.
       </p>
     </Wrapper>
   </React.StrictMode>,

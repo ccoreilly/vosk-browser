@@ -49,8 +49,6 @@ interface VoskResult {
   text: string;
 }
 
-const modelMap = new Map<string, { model: Model; path: string }>();
-
 export const Recognizer: React.FunctionComponent = () => {
   const [utterances, setUtterances] = useState<VoskResult[]>([]);
   const [partial, setPartial] = useState("");

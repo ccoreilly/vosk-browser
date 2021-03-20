@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { createRef, useRef, useState } from "react";
 import { Button, Upload } from "antd";
 import { UploadOutlined } from "@ant-design/icons";
 import styled from "styled-components";
@@ -21,6 +21,8 @@ const FileUpload: React.FunctionComponent<Props> = ({
   loading,
 }) => {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [audioSource, setAudioSource] = useState<MediaElementAudioSourceNode>();
+  const [audioContext, setAudioContext] = useState<AudioContext>();
 
   const onChange = ({ file }: any) => {
     if (recognizer && audioRef.current) {
@@ -28,9 +30,9 @@ const FileUpload: React.FunctionComponent<Props> = ({
       const audioPlayer = audioRef.current;
       audioPlayer.src = fileUrl;
 
-      const audioContext = new AudioContext();
+      const _audioContext = audioContext ?? new AudioContext();
 
-      const recognizerNode = audioContext.createScriptProcessor(4096, 1, 1);
+      const recognizerNode = _audioContext.createScriptProcessor(4096, 1, 1);
       recognizerNode.onaudioprocess = (event) => {
         try {
           if (
@@ -43,8 +45,16 @@ const FileUpload: React.FunctionComponent<Props> = ({
           console.error("acceptWaveform failed", error);
         }
       };
-      const audioSource = audioContext.createMediaElementSource(audioPlayer);
-      audioSource.connect(recognizerNode);
+      recognizerNode.connect(_audioContext.destination);
+
+      const _audioSource =
+        audioSource ?? _audioContext.createMediaElementSource(audioPlayer);
+
+      _audioSource.disconnect();
+      _audioSource.connect(recognizerNode);
+
+      setAudioSource(_audioSource);
+      setAudioContext(_audioContext);
     }
   };
 
