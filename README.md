@@ -79,3 +79,4 @@ window.onload = init;
 - Add example with word/phrase list
 - Write tests
 - Automate npm publish
+- Update to OpenFST 1.8.0
