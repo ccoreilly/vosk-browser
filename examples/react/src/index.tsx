@@ -22,6 +22,9 @@ ReactDOM.render(
         Select a language and load the model to start speech recognition. <br />
         You can either upload a file or speak on the microphone.
       </p>
+      <p>
+        Note: Recognition from a file does not work on Chrome for now, use Firefox instead.
+      </p>
       <Recognizer />
       <p>
         <a href="https://github.com/ccoreilly/vosk-browser">
