@@ -1,4 +1,4 @@
-VOSK-WASM
+Vosk-Browser
 Copyright 2020 Ciaran O'Reilly
 
 The Initial Developer of the the WASM bindings (https://github.com/dtreskunov/tiny-kaldi) for the VOSK API, 

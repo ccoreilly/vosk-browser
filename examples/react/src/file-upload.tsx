@@ -45,13 +45,17 @@ const FileUpload: React.FunctionComponent<Props> = ({
           console.error("acceptWaveform failed", error);
         }
       };
-      recognizerNode.connect(_audioContext.destination);
 
       const _audioSource =
         audioSource ?? _audioContext.createMediaElementSource(audioPlayer);
 
       _audioSource.disconnect();
       _audioSource.connect(recognizerNode);
+      // TODO: investigate why recognition quality worsens when recognizerNode is connected
+      // to destination
+      //
+      // Uncomment the next line for it to work in Chrome.
+      // recognizerNode.connect(_audioContext.destination);
 
       setAudioSource(_audioSource);
       setAudioContext(_audioContext);

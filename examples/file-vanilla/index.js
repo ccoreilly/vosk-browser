@@ -44,6 +44,8 @@ const recognize = async ({ target: { files }  }) => {
     }
     const audioSource = audioContext.createMediaElementSource(audioGrabber);
     audioSource.connect(recognizerNode);
+    // Uncomment the next line for it to work in Chrome.
+    // recognizerNode.connect(audioContext.destination);
 }
 
 window.onload = () => {
