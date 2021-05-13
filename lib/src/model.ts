@@ -18,6 +18,7 @@ import {
 export class Model extends EventTarget {
   private worker: Worker;
   private _ready: boolean = false;
+  private messagePort: MessagePort;
 
   constructor(private modelUrl: string) {
     super();
@@ -63,6 +64,21 @@ export class Model extends EventTarget {
         listener(event.detail);
       }
     });
+  }
+
+  public registerPort(port: MessagePort) {
+    console.debug("Registering port");
+    this.messagePort = port;
+    this.messagePort.onmessage = this.forwardMessage.bind(this);
+  }
+
+  private forwardMessage(event: MessageEvent<ClientMessage>) {
+    const message = event.data;
+    if (ClientMessage.isAudioChunkMessage(message)) {
+      this.postMessage<ClientMessageAudioChunk>(message, {
+        transfer: [message.data.buffer],
+      });
+    }
   }
 
   public get ready(): boolean {

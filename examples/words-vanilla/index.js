@@ -1,5 +1,5 @@
 async function init() {
-const resultsContainer = document.getElementById('recognition-result');
+    const resultsContainer = document.getElementById('recognition-result');
     const partialContainer = document.getElementById('partial');
 
     partialContainer.textContent = "Loading...";
