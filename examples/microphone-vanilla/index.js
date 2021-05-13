@@ -24,16 +24,18 @@ async function init() {
     });
     
     const audioContext = new AudioContext();
-    const recognizerNode = audioContext.createScriptProcessor(4096, 1, 1)
+    const recognizerNode = audioContext.createScriptProcessor(4096, 1, 1);
     recognizerNode.onaudioprocess = (event) => {
         try {
-            recognizer.acceptWaveform(event.inputBuffer)
+            console.log("sending");
+            recognizer.acceptWaveform(event.inputBuffer);
         } catch (error) {
-            console.error('acceptWaveform failed', error)
+            console.error('acceptWaveform failed', error);
         }
     }
     const source = audioContext.createMediaStreamSource(mediaStream);
     source.connect(recognizerNode);
+    resultsContainer.textContent = "Ready";
 }
 
 window.onload = () => {
