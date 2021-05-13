@@ -12,6 +12,7 @@ import {
   RecognizerMessage,
   ServerMessage,
   ServerMessageLoadResult,
+  ClientMessageCreateRecognizer,
 } from "./interfaces";
 
 export class Model extends EventTarget {
@@ -44,12 +45,13 @@ export class Model extends EventTarget {
 
   private handleMessage(event: MessageEvent<ServerMessage>) {
     const message = event.data;
+    if (message) {
+      if (ModelMessage.isLoadResult(message)) {
+        this._ready = message.result;
+      }
 
-    if (ModelMessage.isLoadResult(message)) {
-      this._ready = message.result;
+      this.dispatchEvent(new CustomEvent(message.event, { detail: message }));
     }
-
-    this.dispatchEvent(new CustomEvent(message.event, { detail: message }));
   }
 
   public on(
@@ -81,13 +83,19 @@ export class Model extends EventTarget {
     const model = this;
     return class extends EventTarget {
       public id = uuid();
-      constructor() {
+      constructor(sampleRate: number, grammar?: string) {
         super();
         if (!model.ready) {
           throw new Error(
             "Cannot create KaldiRecognizer. Model is either not ready or has been terminated"
           );
         }
+        model.postMessage<ClientMessageCreateRecognizer>({
+          action: "create",
+          recognizerId: this.id,
+          sampleRate,
+          grammar,
+        });
       }
 
       public on(

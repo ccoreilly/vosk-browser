@@ -14,6 +14,13 @@ export interface ClientMessageAudioChunk {
   sampleRate: number;
 }
 
+export interface ClientMessageCreateRecognizer {
+  action: "create";
+  recognizerId: string;
+  sampleRate: number;
+  grammar?: string;
+}
+
 export interface ClientMessageRemoveRecognizer {
   action: "remove";
   recognizerId: string;
@@ -22,6 +29,7 @@ export interface ClientMessageRemoveRecognizer {
 export type ClientMessage =
   | ClientMessageTerminate
   | ClientMessageLoad
+  | ClientMessageCreateRecognizer
   | ClientMessageAudioChunk
   | ClientMessageRemoveRecognizer;
 
@@ -29,25 +37,31 @@ export namespace ClientMessage {
   export function isTerminateMessage(
     message: ClientMessage
   ): message is ClientMessageTerminate {
-    return message.action === "terminate";
+    return message?.action === "terminate";
   }
 
   export function isLoadMessage(
     message: ClientMessage
   ): message is ClientMessageLoad {
-    return message.action === "load";
+    return message?.action === "load";
   }
 
   export function isAudioChunkMessage(
     message: ClientMessage
   ): message is ClientMessageAudioChunk {
-    return message.action === "audioChunk";
+    return message?.action === "audioChunk";
+  }
+
+  export function isRecognizerCreateMessage(
+    message: ClientMessage
+  ): message is ClientMessageCreateRecognizer {
+    return message?.action === "create";
   }
 
   export function isRecognizerRemoveMessage(
     message: ClientMessage
   ): message is ClientMessageRemoveRecognizer {
-    return message.action === "remove";
+    return message?.action === "remove";
   }
 }
 

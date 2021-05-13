@@ -75,8 +75,10 @@ window.onload = init;
 
 ## Todos
 
-- Support for word/phrase lists in KaldiRecognizer
-- Add example with word/phrase list
+✅ Support for word/phrase lists in KaldiRecognizer
+✅ Add example with word/phrase list
 - Write tests
 - Automate npm publish
 - Update to OpenFST 1.8.0
+- Update to vosk-api 0.3.27
+- Update examples to use AudioWorklet

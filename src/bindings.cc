@@ -35,6 +35,16 @@ static Model *makeModel(const std::string &model_path) {
     }
 }
 
+static KaldiRecognizer* makeRecognizerWithGrammar(Model *model, float sample_frequency, const std::string &grammar) {
+    try {
+        std::printf("Creating model with grammar");
+        return new KaldiRecognizer(model, sample_frequency, grammar.c_str());
+    } catch (std::exception &e) {
+        std::printf("Exception in KaldiRecognizer ctor: %s\n", e.what());
+        throw;
+    }
+}
+
 static bool KaldiRecognizer_AcceptWaveform(KaldiRecognizer &self, long jsHeapAddr, int len) {
     const float *fdata = (const float*) jsHeapAddr;
     // std::printf("AcceptWaveform received len=%d 0=%f %d=%f\n", len, fdata[0], len-1, fdata[len-1]);
@@ -83,6 +93,7 @@ EMSCRIPTEN_BINDINGS(vosk) {
         ;
 
     class_<KaldiRecognizer>("KaldiRecognizer")
+        .constructor(&makeRecognizerWithGrammar, allow_raw_pointers())
         .constructor<Model *, float>(allow_raw_pointers())
         .function("AcceptWaveform", &KaldiRecognizer_AcceptWaveform)
         .function("Result", &KaldiRecognizer_Result)

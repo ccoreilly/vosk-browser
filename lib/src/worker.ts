@@ -1,6 +1,10 @@
 import LoadVosk, { Vosk, KaldiRecognizer, Model } from "./vosk-wasm";
 
-import { ClientMessage, ClientMessageAudioChunk } from "./interfaces";
+import {
+  ClientMessage,
+  ClientMessageAudioChunk,
+  ClientMessageCreateRecognizer,
+} from "./interfaces";
 
 const ctx: Worker = self as any;
 
@@ -9,6 +13,8 @@ export interface Recognizer {
   buffAddr?: number;
   buffSize?: number;
   kaldiRecognizer: KaldiRecognizer;
+  sampleRate: number;
+  grammar?: string;
 }
 export class RecognizerWorker {
   private Vosk: Vosk;
@@ -21,6 +27,10 @@ export class RecognizerWorker {
 
   private handleMessage(event: MessageEvent<ClientMessage>) {
     const message = event.data;
+
+    if (!message) {
+      return;
+    }
 
     if (ClientMessage.isLoadMessage(message)) {
       console.debug(JSON.stringify(message));
@@ -59,8 +69,18 @@ export class RecognizerWorker {
       return;
     }
 
+    if (ClientMessage.isRecognizerCreateMessage(message)) {
+      this.createRecognizer(message)
+        .then((result) => {
+          ctx.postMessage(result);
+        })
+        .catch((error) => ctx.postMessage({ event: "error", error }));
+      return;
+    }
+
     if (ClientMessage.isTerminateMessage(message)) {
       this.terminate();
+      return;
     }
 
     ctx.postMessage({ error: `Unknown message ${JSON.stringify(message)}` });
@@ -129,19 +149,73 @@ export class RecognizerWorker {
     recognizer.buffSize = undefined;
   }
 
+  private async createRecognizer({
+    recognizerId,
+    sampleRate,
+    grammar,
+  }: ClientMessageCreateRecognizer) {
+    console.debug(
+      `Creating recognizer (id: ${recognizerId}) with sample rate ${sampleRate} and grammar ${grammar}`
+    );
+    try {
+      let kaldiRecognizer: KaldiRecognizer;
+      if (grammar) {
+        kaldiRecognizer = new this.Vosk.KaldiRecognizer(
+          this.model,
+          sampleRate,
+          grammar
+        );
+      } else {
+        kaldiRecognizer = new this.Vosk.KaldiRecognizer(this.model, sampleRate);
+      }
+
+      this.recognizers.set(recognizerId, {
+        id: recognizerId,
+        kaldiRecognizer,
+        sampleRate,
+        grammar,
+      });
+    } catch (error) {
+      const errorMsg = `Recognizer (id: ${recognizerId}): Could not be created due to: ${error}\n${error.stack}`;
+      console.error(errorMsg);
+      return {
+        error: errorMsg,
+      };
+    }
+  }
+
   private async processAudioChunk({
     recognizerId,
     data,
     sampleRate,
   }: ClientMessageAudioChunk) {
+    console.debug(
+      `Recognizer (id: ${recognizerId}): process audio chunk with sampleRate ${sampleRate}`
+    );
+
     if (!this.recognizers.has(recognizerId)) {
-      this.recognizers.set(recognizerId, {
-        id: recognizerId,
-        kaldiRecognizer: new this.Vosk.KaldiRecognizer(this.model, sampleRate),
-      });
+      console.warn(`Recognizer not ready, ignoring`);
+      return {
+        error: `Recognizer (id: ${recognizerId}): Not ready`,
+      };
     }
 
-    const recognizer = this.recognizers.get(recognizerId)!;
+    let recognizer = this.recognizers.get(recognizerId)!;
+
+    if (recognizer.sampleRate !== sampleRate) {
+      console.warn(
+        `Recognizer (id: ${recognizerId}) was created with sampleRate ${recognizer.sampleRate} but audio chunk with sampleRate ${sampleRate} was received! Recreating recognizer...`
+      );
+
+      await this.createRecognizer({
+        action: "create",
+        recognizerId,
+        sampleRate,
+        grammar: recognizer.grammar,
+      });
+
+      recognizer = this.recognizers.get(recognizerId)!;
+    }
 
     const requiredSize = data.length * data.BYTES_PER_ELEMENT;
     this.allocateBuffer(requiredSize, recognizer);
