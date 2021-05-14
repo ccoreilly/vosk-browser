@@ -16,10 +16,19 @@ export interface Recognizer {
   sampleRate: number;
   grammar?: string;
 }
+
+const SAMPLE_RATE = 48000;
+
 export class RecognizerWorker {
   private Vosk: Vosk;
   private model: Model;
   private recognizers = new Map<string, Recognizer>();
+  private sharedBuffers = {
+    audio: new SharedArrayBuffer(512),
+    state: new SharedArrayBuffer(Int32Array.BYTES_PER_ELEMENT * 1),
+  };
+  private audioSharedArray = new Float32Array(this.sharedBuffers.audio);
+  private stateSharedArray = new Int32Array(this.sharedBuffers.state);
 
   constructor() {
     ctx.addEventListener("message", (event) => this.handleMessage(event));
@@ -80,6 +89,18 @@ export class RecognizerWorker {
 
     if (ClientMessage.isTerminateMessage(message)) {
       this.terminate();
+      return;
+    }
+
+    if (ClientMessage.isInitSharedArrayBufferMessage(message)) {
+      console.debug("Sharing buffers");
+      ctx.postMessage({
+        event: "shareBuffer",
+        sharedBuffers: this.sharedBuffers,
+      });
+
+      this.waitForSharedArrayData();
+      console.debug("No longer waiting");
       return;
     }
 
@@ -242,11 +263,32 @@ export class RecognizerWorker {
       };
     } else {
       json = recognizer.kaldiRecognizer.PartialResult();
+
       return {
         event: "partialresult",
         recognizerId: recognizer.id,
         result: JSON.parse(json),
       };
+    }
+  }
+
+  private async waitForSharedArrayData() {
+    while (Atomics.wait(this.stateSharedArray, 0, 0) === "ok") {
+      console.debug("Reading audio shared array");
+      const data = this.audioSharedArray;
+      for (const recognizerId of this.recognizers.keys()) {
+        console.debug(`Sending audioChunk to recognizer ${recognizerId}`);
+
+        const result = await this.processAudioChunk({
+          action: "audioChunk",
+          recognizerId,
+          data,
+          sampleRate: SAMPLE_RATE,
+        });
+
+        ctx.postMessage(result);
+      }
+      Atomics.store(this.stateSharedArray, 0, 0);
     }
   }
 

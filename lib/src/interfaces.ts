@@ -26,12 +26,17 @@ export interface ClientMessageRemoveRecognizer {
   recognizerId: string;
 }
 
+export interface ClientMessageInitSharedArrayBuffer {
+  action: "initSharedArrayBuffer";
+}
+
 export type ClientMessage =
   | ClientMessageTerminate
   | ClientMessageLoad
   | ClientMessageCreateRecognizer
   | ClientMessageAudioChunk
-  | ClientMessageRemoveRecognizer;
+  | ClientMessageRemoveRecognizer
+  | ClientMessageInitSharedArrayBuffer;
 
 export namespace ClientMessage {
   export function isTerminateMessage(
@@ -62,6 +67,12 @@ export namespace ClientMessage {
     message: ClientMessage
   ): message is ClientMessageRemoveRecognizer {
     return message?.action === "remove";
+  }
+
+  export function isInitSharedArrayBufferMessage(
+    message: ClientMessage
+  ): message is ClientMessageInitSharedArrayBuffer {
+    return message?.action === "initSharedArrayBuffer";
   }
 }
 
@@ -94,15 +105,19 @@ export interface ServerMessagePartialResult {
   };
 }
 
-export type ModelMessage = ServerMessageLoadResult | ServerMessageError;
-
-export namespace ModelMessage {
-  export function isLoadResult(
-    message: any
-  ): message is ServerMessageLoadResult {
-    return message?.event === "load";
-  }
+export interface ServerMessageShareBuffer {
+  event: "shareBuffer";
+  sharedBuffers: {
+    audio: SharedArrayBuffer;
+    state: SharedArrayBuffer;
+  };
 }
+
+export type ModelMessage =
+  | ServerMessageLoadResult
+  | ServerMessageError
+  | ServerMessageShareBuffer;
+
 export type RecognizerMessage =
   | ServerMessagePartialResult
   | ServerMessageResult;
@@ -111,6 +126,19 @@ export type RecognizerEvent = RecognizerMessage["event"];
 
 export type ServerMessage = ModelMessage | RecognizerMessage;
 
+export namespace ServerMessage {
+  export function isServerMessageLoadResult(
+    message: ServerMessage
+  ): message is ServerMessageLoadResult {
+    return message?.event === "load";
+  }
+
+  export function isServerMessageShareBuffer(
+    message: ServerMessage
+  ): message is ServerMessageShareBuffer {
+    return message?.event === "shareBuffer";
+  }
+}
 export namespace ServerMessage {
   export function isRecognizerMessage(message: ServerMessage): boolean {
     return ["result", "partialresult"].includes(message.event);

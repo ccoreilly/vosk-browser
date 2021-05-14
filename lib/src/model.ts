@@ -1,6 +1,8 @@
 import { v4 as uuid } from "uuid";
 
 import WebWorker from "web-worker:./worker.ts";
+import RecognizerWorkletProcessor from "./recognizer-worklet-processor.js";
+
 import {
   ClientMessage,
   ClientMessageAudioChunk,
@@ -13,12 +15,14 @@ import {
   ServerMessage,
   ServerMessageLoadResult,
   ClientMessageCreateRecognizer,
+  ClientMessageInitSharedArrayBuffer,
 } from "./interfaces";
 
 export class Model extends EventTarget {
   private worker: Worker;
   private _ready: boolean = false;
   private messagePort: MessagePort;
+  private _audioWorkletNode: AudioWorkletNode;
 
   constructor(private modelUrl: string) {
     super();
@@ -46,8 +50,18 @@ export class Model extends EventTarget {
 
   private handleMessage(event: MessageEvent<ServerMessage>) {
     const message = event.data;
+    console.debug(
+      `Client received message from server: ${JSON.stringify(message, null, 2)}`
+    );
     if (message) {
-      if (ModelMessage.isLoadResult(message)) {
+      if (
+        ServerMessage.isServerMessageShareBuffer(message) &&
+        this._audioWorkletNode
+      ) {
+        this._audioWorkletNode.port.postMessage(message);
+      }
+
+      if (ServerMessage.isServerMessageLoadResult(message)) {
         this._ready = message.result;
       }
 
@@ -79,6 +93,29 @@ export class Model extends EventTarget {
         transfer: [message.data.buffer],
       });
     }
+  }
+
+  public async createAudioWorkletNode(
+    context: BaseAudioContext,
+    options?: AudioWorkletNodeOptions
+  ) {
+    await context.audioWorklet.addModule(RecognizerWorkletProcessor);
+
+    this._audioWorkletNode = new AudioWorkletNode(
+      context,
+      "recognizer-audio-processor",
+      options
+    );
+
+    this.postMessage<ClientMessageInitSharedArrayBuffer>({
+      action: "initSharedArrayBuffer",
+    });
+
+    return this._audioWorkletNode;
+  }
+
+  public get audioWorkletNode(): AudioWorkletNode {
+    return this.audioWorkletNode;
   }
 
   public get ready(): boolean {

@@ -1,0 +1,39 @@
+import { ServerMessageShareBuffer } from "./interfaces";
+
+export default class RecognizerAudioProcessor extends AudioWorkletProcessor {
+  private audioSharedArray: Float32Array;
+  private stateSharedArray: Int32Array;
+
+  constructor(options?: AudioWorkletNodeOptions) {
+    super(options);
+
+    this.port.onmessage = this.processMessage.bind(this);
+  }
+
+  private processMessage(event: MessageEvent<ServerMessageShareBuffer>) {
+    console.debug(`Received event ${JSON.stringify(event.data, null, 2)}`);
+    if (event.data.event === "shareBuffer") {
+      this.audioSharedArray = new Float32Array(event.data.sharedBuffers.audio);
+      this.stateSharedArray = new Int32Array(event.data.sharedBuffers.state);
+    }
+  }
+
+  protected process(
+    inputs: Float32Array[][],
+    outputs: Float32Array[][],
+    parameters: Record<string, Float32Array>
+  ) {
+    const data = inputs[0][0];
+    if (data) {
+      // AudioBuffer samples are represented as floating point numbers between -1.0 and 1.0 whilst
+      // Kaldi expects them to be between -32768 and 32767 (the range of a signed int16)
+      const audioArray = data.map((value) => value * 0x8000);
+
+      this.audioSharedArray.set(audioArray);
+      Atomics.store(this.stateSharedArray, 0, 1);
+    }
+    return true;
+  }
+}
+
+registerProcessor("recognizer-audio-processor", RecognizerAudioProcessor);

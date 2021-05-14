@@ -16,9 +16,11 @@ async function init() {
         const result = message.result;
         console.log(JSON.stringify(result, null, 2));
         
-        const newSpan = document.createElement('span');
-        newSpan.textContent = `${result.text} `;
-        resultsContainer.insertBefore(newSpan, partialContainer);
+        if (result.text.trim()) {
+            const newSpan = document.createElement('span');
+            newSpan.textContent = `${result.text} `;
+            resultsContainer.insertBefore(newSpan, partialContainer);
+        }
     });
     recognizer.on("partialresult", (message) => {
         const partial = message.result.partial;
