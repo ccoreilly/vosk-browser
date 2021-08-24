@@ -3,6 +3,7 @@ import { v4 as uuid } from "uuid";
 import WebWorker from "web-worker:./worker.ts";
 import {
   ClientMessage,
+  ClientMessageSet,
   ClientMessageAudioChunk,
   ClientMessageTerminate,
   ClientMessageLoad,
@@ -123,6 +124,17 @@ export class Model extends EventTarget {
             listener(event.detail);
           }
         });
+      }
+
+      public setWords(words: boolean): void {
+        model.postMessage<ClientMessageSet>(
+          {
+            action: "set",
+            recognizerId: this.id,
+            key: "words",
+            value: words
+          }
+        );
       }
 
       public acceptWaveform(buffer: AudioBuffer): void {

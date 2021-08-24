@@ -45,6 +45,11 @@ static KaldiRecognizer* makeRecognizerWithGrammar(Model *model, float sample_fre
     }
 }
 
+static void KaldiRecognizer_SetWords(KaldiRecognizer &self, bool words) {
+    std::printf("Setting words to %s\n", words ? "true" : "false");
+    self.SetWords(words);
+}
+
 static bool KaldiRecognizer_AcceptWaveform(KaldiRecognizer &self, long jsHeapAddr, int len) {
     const float *fdata = (const float*) jsHeapAddr;
     // std::printf("AcceptWaveform received len=%d 0=%f %d=%f\n", len, fdata[0], len-1, fdata[len-1]);
@@ -95,6 +100,7 @@ EMSCRIPTEN_BINDINGS(vosk) {
     class_<KaldiRecognizer>("KaldiRecognizer")
         .constructor(&makeRecognizerWithGrammar, allow_raw_pointers())
         .constructor<Model *, float>(allow_raw_pointers())
+        .function("SetWords", &KaldiRecognizer_SetWords)
         .function("AcceptWaveform", &KaldiRecognizer_AcceptWaveform)
         .function("Result", &KaldiRecognizer_Result)
         .function("FinalResult", &KaldiRecognizer_FinalResult)

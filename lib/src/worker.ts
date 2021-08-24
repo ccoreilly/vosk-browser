@@ -3,6 +3,7 @@ import LoadVosk, { Vosk, KaldiRecognizer, Model } from "./vosk-wasm";
 import {
   ClientMessage,
   ClientMessageAudioChunk,
+  ClientMessageSet,
   ClientMessageCreateRecognizer,
 } from "./interfaces";
 
@@ -14,6 +15,7 @@ export interface Recognizer {
   buffSize?: number;
   kaldiRecognizer: KaldiRecognizer;
   sampleRate: number;
+  words?: boolean;
   grammar?: string;
 }
 export class RecognizerWorker {
@@ -48,6 +50,11 @@ export class RecognizerWorker {
         })
         .catch((error) => ctx.postMessage({ error }));
 
+      return;
+    }
+
+    if (ClientMessage.isSetMessage(message)) {
+      this.setConfiguration(message);
       return;
     }
 
@@ -184,6 +191,30 @@ export class RecognizerWorker {
     }
   }
 
+  private async setConfiguration({
+    recognizerId,
+    key,
+    value
+  }: ClientMessageSet) {
+    console.debug(
+      `Recognizer (id: ${recognizerId}): set ${key} to ${value}`
+    );
+
+    if (!this.recognizers.has(recognizerId)) {
+      console.warn(`Recognizer not ready, ignoring`);
+      return;
+    }
+
+    const recognizer = this.recognizers.get(recognizerId)!;
+
+    if (key === "words") {
+      recognizer.words = value;
+      recognizer.kaldiRecognizer.SetWords(value);
+    } else {
+      console.warn(`Unrecognized key ${key}`);
+    }
+  }
+
   private async processAudioChunk({
     recognizerId,
     data,
@@ -214,7 +245,12 @@ export class RecognizerWorker {
         grammar: recognizer.grammar,
       });
 
-      recognizer = this.recognizers.get(recognizerId)!;
+      const newRecognizer = this.recognizers.get(recognizerId)!;
+      if (recognizer.words) {
+        newRecognizer.words = true;
+        newRecognizer.kaldiRecognizer.SetWords(true);
+      }
+      recognizer = newRecognizer;
     }
 
     const requiredSize = data.length * data.BYTES_PER_ELEMENT;
