@@ -6,6 +6,7 @@ export declare class Model {
 export declare class KaldiRecognizer {
   constructor(model: Model, sampleRate: number);
   constructor(model: Model, sampleRate: number, grammar: string);
+  public SetWords(words: boolean): void;
   public AcceptWaveform(address: number, length: number): boolean;
   public Result(): string;
   public PartialResult(): string;

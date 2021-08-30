@@ -3,6 +3,7 @@ import { v4 as uuid } from "uuid";
 import WebWorker from "web-worker:./worker.ts";
 import {
   ClientMessage,
+  ClientMessageSet,
   ClientMessageAudioChunk,
   ClientMessageTerminate,
   ClientMessageLoad,
@@ -125,15 +126,30 @@ export class Model extends EventTarget {
         });
       }
 
+      public setWords(words: boolean): void {
+        model.postMessage<ClientMessageSet>(
+          {
+            action: "set",
+            recognizerId: this.id,
+            key: "words",
+            value: words
+          }
+        );
+      }
+
       public acceptWaveform(buffer: AudioBuffer): void {
         if (buffer.numberOfChannels < 1) {
           throw new Error(`AudioBuffer should contain at least one channel`);
         }
 
+        this.acceptWaveformFloat(buffer.getChannelData(0), buffer.sampleRate);
+      }
+
+      public acceptWaveformFloat(buffer: Float32Array, sampleRate: number): void {
         // AudioBuffer samples are represented as floating point numbers between -1.0 and 1.0 whilst
         // Kaldi expects them to be between -32768 and 32767 (the range of a signed int16)
         // Should this be handled by the library (better in the C codebase) or left to the end-user to decide?
-        const data = buffer.getChannelData(0).map((value) => value * 0x8000);
+        const data = buffer.map((value) => value * 0x8000);
         if (!(data instanceof Float32Array)) {
           throw new Error(
             `Channel data is not a Float32Array as expected: ${data}`
@@ -146,7 +162,7 @@ export class Model extends EventTarget {
             action: "audioChunk",
             data,
             recognizerId: this.id,
-            sampleRate: buffer.sampleRate,
+            sampleRate: sampleRate,
           },
           {
             transfer: [data.buffer],

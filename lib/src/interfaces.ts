@@ -7,6 +7,13 @@ export interface ClientMessageTerminate {
   action: "terminate";
 }
 
+export interface ClientMessageSet {
+  action: "set";
+  recognizerId: string;
+  key: string;
+  value: any;
+}
+
 export interface ClientMessageAudioChunk {
   action: "audioChunk";
   recognizerId: string;
@@ -31,6 +38,7 @@ export type ClientMessage =
   | ClientMessageLoad
   | ClientMessageCreateRecognizer
   | ClientMessageAudioChunk
+  | ClientMessageSet
   | ClientMessageRemoveRecognizer;
 
 export namespace ClientMessage {
@@ -44,6 +52,12 @@ export namespace ClientMessage {
     message: ClientMessage
   ): message is ClientMessageLoad {
     return message?.action === "load";
+  }
+
+  export function isSetMessage(
+    message: ClientMessage
+  ): message is ClientMessageSet {
+    return message?.action === "set";
   }
 
   export function isAudioChunkMessage(
