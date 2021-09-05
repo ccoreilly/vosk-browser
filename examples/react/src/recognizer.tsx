@@ -67,7 +67,7 @@ export const Recognizer: React.FunctionComponent = () => {
     const model = await createModel(process.env.PUBLIC_URL + "/models/" + path);
 
     setLoadedModel({ model, path });
-    const recognizer = new model.KaldiRecognizer();
+    const recognizer = new model.KaldiRecognizer(48000);
     recognizer.on("result", (message: any) => {
       const result: VoskResult = message.result;
       setUtterances((utt: VoskResult[]) => [...utt, result]);

@@ -45,7 +45,7 @@ static KaldiRecognizer* makeRecognizerWithGrammar(Model *model, float sample_fre
     }
 }
 
-static void KaldiRecognizer_SetWords(KaldiRecognizer &self, bool words) {
+static void KaldiRecognizer_SetWords(KaldiRecognizer &self, int words) {
     std::printf("Setting words to %s\n", words ? "true" : "false");
     self.SetWords(words);
 }

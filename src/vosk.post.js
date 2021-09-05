@@ -154,19 +154,7 @@
         )
     }
 
-    // It should be possible to replace FS-symbols by specifying
-    // "-s RUNTIME_EXPORTS=['FS', ...]" in the Makefile, once the base Docker
-    // image (based on dockcross/web-wasm) is updated to contain Emscripten
-    // commit 2f6cf395 (>= 1.39.8)
-    // 1. https://hub.docker.com/r/dockcross/web-wasm/tags
-    // 2. https://github.com/emscripten-core/emscripten/commit/2f6cf395
-    // 3. https://github.com/emscripten-core/emscripten/pull/10368
-    // 4. https://github.com/emscripten-core/emscripten/issues/10317
     Object.assign(Module, {
-        'FS': FS,
-        'MEMFS': MEMFS,
-        'IDBFS': IDBFS,
-        'WORKERFS': WORKERFS,
         'downloadAndExtract': downloadAndExtract,
         'syncFilesystem': syncFilesystem,
     });
