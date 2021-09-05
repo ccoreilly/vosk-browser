@@ -48,7 +48,10 @@ export class RecognizerWorker {
         .then((result) => {
           ctx.postMessage({ event: "load", result });
         })
-        .catch((error) => ctx.postMessage({ error }));
+        .catch((error) => {
+          console.error(error);
+          ctx.postMessage({ error: error.message });
+        });
 
       return;
     }
@@ -97,10 +100,14 @@ export class RecognizerWorker {
     const storagePath = "/vosk";
     const modelPath = storagePath + "/" + modelUrl.replace(/[\W]/g, "_");
     return new Promise((resolve, reject) =>
-      LoadVosk().then((loaded: any) => {
-        this.Vosk = loaded;
-        resolve(true);
-      })
+      LoadVosk()
+        .then((loaded: any) => {
+          this.Vosk = loaded;
+          resolve(true);
+        })
+        .catch((e) => {
+          console.error(e);
+        })
     )
       .then(() => {
         console.debug("Setting up persistent storage at " + storagePath);
@@ -194,11 +201,9 @@ export class RecognizerWorker {
   private async setConfiguration({
     recognizerId,
     key,
-    value
+    value,
   }: ClientMessageSet) {
-    console.debug(
-      `Recognizer (id: ${recognizerId}): set ${key} to ${value}`
-    );
+    console.debug(`Recognizer (id: ${recognizerId}): set ${key} to ${value}`);
 
     if (!this.recognizers.has(recognizerId)) {
       console.warn(`Recognizer not ready, ignoring`);
