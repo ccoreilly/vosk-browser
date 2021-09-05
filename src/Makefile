@@ -24,12 +24,14 @@ LINK_FLAGS := \
 	-s ERROR_ON_UNDEFINED_SYMBOLS=0 \
 	-s MODULARIZE=1 \
 	-s EXPORT_NAME=LoadVosk \
-	-s ENVIRONMENT=worker
+	-s ENVIRONMENT=worker \
+	-s EXPORTED_RUNTIME_METHODS=['FS','IDBFS'] \
+	-lidbfs.js
 
 ifdef DEBUG
 DESTDIR ?= ${DST_ROOT}/build/debug
-COMPILE_FLAGS += -O0 -g4
-LINK_FLAGS += -O0 -g4 -s DEMANGLE_SUPPORT=1
+COMPILE_FLAGS += -O0 -gsource-map
+LINK_FLAGS += -O0 -gsource-map -s DEMANGLE_SUPPORT=1
 else
 DESTDIR ?= ${DST_ROOT}/build/release
 COMPILE_FLAGS += -O3
