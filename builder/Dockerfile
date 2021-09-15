@@ -1,5 +1,7 @@
 FROM dockcross/web-wasm:20210901-4a98c0e
 
+ENV PATH="/emsdk/upstream/bin:$PATH"
+
 RUN apt-get update \
     && apt-get install -y \
     subversion python2 \
@@ -19,20 +21,14 @@ ENV OPENFST_VERSION=1.8.0
 RUN emmake make -j $(nproc) CXXFLAGS="-O3 -r" LDFLAGS=-O3 OPENFST_CONFIGURE="--enable-static --disable-shared --enable-far --enable-ngram-fsts --enable-lookahead-fsts --with-pic" openfst
 RUN find . -type f -path '*/.libs/*.a' -exec sh -xc 'mv {} $(dirname {})/..' \;
 
-WORKDIR /opt/kaldi/tools/CLAPACK-WA
-RUN git clone https://github.com/adrianbg/CLAPACK-WA .
-ADD CLAPACK-WA.patch /tmp
-RUN git apply -v /tmp/CLAPACK-WA.patch
-RUN EMMAKEN_CFLAGS="-r" emmake make -j $(nproc)
-
-WORKDIR /opt/kaldi/tools/gsl
-RUN curl --fail -q -L http://mirrors.ocf.berkeley.edu/gnu/gsl/gsl-2.6.tar.gz | \
-    tar xz --strip-components=1
-RUN emconfigure ./configure
-RUN EMMAKEN_CFLAGS="-r" emmake make -j $(nproc)
+WORKDIR /opt/kaldi/tools/clapack-wasm
+RUN git clone https://gitlab.inria.fr/kaldi.web/clapack-wasm.git .
+ADD clapack-wasm.patch /tmp
+RUN git apply -v /tmp/clapack-wasm.patch
+RUN make 
 
 WORKDIR /opt/kaldi/src
-RUN CXXFLAGS=-O3 LDFLAGS=-O3 emconfigure ./configure --use-cuda=no --static --static-fst=yes --clapack-root=../tools/CLAPACK-WA --fst-root=../tools/openfst-1.8.0/src
+RUN CXXFLAGS=-O3 LDFLAGS=-O3 emconfigure ./configure --use-cuda=no --static --static-fst=yes --clapack-root=../tools/clapack-wasm/CLAPACK-3.2.1 --fst-root=../tools/openfst-1.8.0/src
 RUN EMMAKEN_CFLAGS="-r -s ERROR_ON_UNDEFINED_SYMBOLS=0 -Wl,--allow-undefined" emmake make -j $(nproc)
 
 WORKDIR /tmp/zlib

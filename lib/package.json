@@ -1,6 +1,6 @@
 {
   "name": "vosk-browser",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Kaldi in-browser speech recognition based on a WASM build of the Vosk library",
   "main": "./dist/vosk.js",
   "module": "./dist/vosk.js",
@@ -34,8 +34,6 @@
     "ts-loader": "^8.0.17",
     "tslib": "^2.1.0",
     "typescript": "^4.1.5",
-    "webpack": "^5.23.0",
-    "webpack-cli": "^4.5.0",
     "worker-loader": "^3.0.8"
   }
 }

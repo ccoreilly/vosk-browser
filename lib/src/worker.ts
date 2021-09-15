@@ -190,7 +190,7 @@ export class RecognizerWorker {
         grammar,
       });
     } catch (error) {
-      const errorMsg = `Recognizer (id: ${recognizerId}): Could not be created due to: ${error}\n${error.stack}`;
+      const errorMsg = `Recognizer (id: ${recognizerId}): Could not be created due to: ${error}\n${(error as Error)?.stack}`;
       console.error(errorMsg);
       return {
         error: errorMsg,
