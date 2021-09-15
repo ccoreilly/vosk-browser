@@ -24,7 +24,7 @@ $ npm i vosk-browser
 You can also use a CDN like jsdelivr to add the library to your page, which will be accessible via the global variable `Vosk`:
 
 ```
-<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/vosk-browser@0.0.3/dist/vosk.js"></script>
+<script type="application/javascript" src="https://cdn.jsdelivr.net/npm/vosk-browser@0.0.5/dist/vosk.js"></script>
 ```
 
 ## Usage
@@ -75,10 +75,5 @@ window.onload = init;
 
 ## Todos
 
-✅ Support for word/phrase lists in KaldiRecognizer
-✅ Add example with word/phrase list
 - Write tests
 - Automate npm publish
-- Update to OpenFST 1.8.0
-- Update to vosk-api 0.3.27
-- Update examples to use AudioWorklet
