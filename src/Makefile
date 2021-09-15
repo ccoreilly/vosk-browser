@@ -5,6 +5,7 @@ DST_ROOT := ${MAKEFILE_ROOT}/..
 VOSK_BROWSER_ROOT := ${MAKEFILE_ROOT}/../lib/src
 KALDI_ROOT ?= /opt/kaldi
 CLAPACKROOT ?= ${KALDI_ROOT}/tools/clapack-wasm
+CXX := emcc
 
 # https://github.com/emscripten-core/emscripten/blob/master/src/settings.js
 COMPILE_FLAGS := \
@@ -56,10 +57,8 @@ LIBS = \
 	${KALDI_ROOT}/src/transform/kaldi-transform.bc \
 	${KALDI_ROOT}/src/tree/kaldi-tree.bc \
 	${KALDI_ROOT}/src/util/kaldi-util.bc \
-	$(CLAPACKROOT)/CLAPACK-3.2.1/lapack.a \
-	$(CLAPACKROOT)/CLAPACK-3.2.1/libcblaswr.a \
-	$(CLAPACKROOT)/CBLAS/lib/cblas.a \
-	$(CLAPACKROOT)/f2c_BLAS-3.8.0/blas.a \
+	/app/lib/liblapack.a \
+	/app/lib/librefblas.a \
 	${KALDI_ROOT}/tools/openfst/lib/libfst.a \
 	${KALDI_ROOT}/tools/openfst/lib/libfstngram.a \
 	/opt/lib/libarchive.so

@@ -1,6 +1,6 @@
 MAKEFILE_ROOT := $(realpath $(dir $(firstword $(MAKEFILE_LIST))))
 ENV := 
-TAG ?= 0.0.5
+TAG ?= 0.0.6
 
 ifdef DEBUG
 ENV += -e DEBUG=1
