@@ -35,7 +35,7 @@ See the [README](./lib/README.md) in `./lib` for API reference documentation or 
 
 One of the simplest examples that assumes `vosk-browser` is loaded via a `script` tag. It loads the model named `model.tar.gz`located in the same path as the script and starts listening to the microphone. Recognition results are logged to the console.
 
-```
+```js
 async function init() {
     const model = await Vosk.createModel('model.tar.gz');
 
