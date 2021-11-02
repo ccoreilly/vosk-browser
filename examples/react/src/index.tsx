@@ -23,7 +23,8 @@ ReactDOM.render(
         You can either upload a file or speak on the microphone.
       </p>
       <p>
-        Note: Recognition from a file does not work on Chrome for now, use Firefox instead.
+        Note: Recognition from a file does not work on Chrome for now, use
+        Firefox instead.
       </p>
       <Recognizer />
       <p>
@@ -32,7 +33,11 @@ ReactDOM.render(
         </a>
       </p>
       <p>
-        All models are Copyright 2019{" "}
+        Malayalam model is Copyright 2021{" "}
+        <a href="https://gitlab.com/kavyamanohar/vosk-malayalam/">
+          Kavya Manohar
+        </a>
+        . All other models are Copyright 2019{" "}
         <a href="https://alphacephei.com/en/">Alpha Cephei</a> Inc. All Rights
         Reserved. <a href="https://alphacephei.com/vosk/models">Distributed</a>{" "}
         under Apache 2.0 license.

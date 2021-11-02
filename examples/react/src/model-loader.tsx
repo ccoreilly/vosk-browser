@@ -29,7 +29,7 @@ export const models: Array<{ name: string; path: string }> = [
     path: "vosk-model-small-cn-0.3.tar.gz",
   },
   {
-    name: "German",
+    name: "Deutsch",
     path: "vosk-model-small-de-0.15.tar.gz",
   },
   {
@@ -41,7 +41,7 @@ export const models: Array<{ name: string; path: string }> = [
     path: "vosk-model-small-en-us-0.15.tar.gz",
   },
   {
-    name: "Spanish",
+    name: "Español",
     path: "vosk-model-small-es-0.3.tar.gz",
   },
   {
@@ -55,6 +55,10 @@ export const models: Array<{ name: string; path: string }> = [
   {
     name: "Italiano",
     path: "vosk-model-small-it-0.4.tar.gz",
+  },
+  {
+    name: "Malayalam",
+    path: "vosk-model-malayalam-bigram.tar.gz",
   },
   {
     name: "Portuguese",
