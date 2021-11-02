@@ -1,24 +1,23 @@
 {
   "files": {
     "main.css": "/vosk-browser/static/css/main.af9e7fec.chunk.css",
-    "main.js": "/vosk-browser/static/js/main.6740ec5d.chunk.js",
-    "main.js.map": "/vosk-browser/static/js/main.6740ec5d.chunk.js.map",
+    "main.js": "/vosk-browser/static/js/main.abb0eedf.chunk.js",
+    "main.js.map": "/vosk-browser/static/js/main.abb0eedf.chunk.js.map",
     "runtime-main.js": "/vosk-browser/static/js/runtime-main.9682b701.js",
     "runtime-main.js.map": "/vosk-browser/static/js/runtime-main.9682b701.js.map",
     "static/css/2.9d3b5bd8.chunk.css": "/vosk-browser/static/css/2.9d3b5bd8.chunk.css",
-    "static/js/2.56552b56.chunk.js": "/vosk-browser/static/js/2.56552b56.chunk.js",
-    "static/js/2.56552b56.chunk.js.map": "/vosk-browser/static/js/2.56552b56.chunk.js.map",
+    "static/js/2.51f09c2d.chunk.js": "/vosk-browser/static/js/2.51f09c2d.chunk.js",
+    "static/js/2.51f09c2d.chunk.js.map": "/vosk-browser/static/js/2.51f09c2d.chunk.js.map",
     "index.html": "/vosk-browser/index.html",
     "static/css/2.9d3b5bd8.chunk.css.map": "/vosk-browser/static/css/2.9d3b5bd8.chunk.css.map",
     "static/css/main.af9e7fec.chunk.css.map": "/vosk-browser/static/css/main.af9e7fec.chunk.css.map",
-    "static/js/2.56552b56.chunk.js.LICENSE.txt": "/vosk-browser/static/js/2.56552b56.chunk.js.LICENSE.txt",
-    "static/js/main.6740ec5d.chunk.js.LICENSE.txt": "/vosk-browser/static/js/main.6740ec5d.chunk.js.LICENSE.txt"
+    "static/js/2.51f09c2d.chunk.js.LICENSE.txt": "/vosk-browser/static/js/2.51f09c2d.chunk.js.LICENSE.txt"
   },
   "entrypoints": [
     "static/js/runtime-main.9682b701.js",
     "static/css/2.9d3b5bd8.chunk.css",
-    "static/js/2.56552b56.chunk.js",
+    "static/js/2.51f09c2d.chunk.js",
     "static/css/main.af9e7fec.chunk.css",
-    "static/js/main.6740ec5d.chunk.js"
+    "static/js/main.abb0eedf.chunk.js"
   ]
 }
