@@ -6,12 +6,14 @@ ifdef DEBUG
 ENV += -e DEBUG=1
 endif
 
-.PHONY: build builder
+.PHONY: builder
 builder:
 	docker build --progress=plain -f builder/Dockerfile -t vosk-wasm-builder:${TAG} builder
 	
+.PHONY: binary
 binary:
 	docker run --rm -it ${ENV} -v ${MAKEFILE_ROOT}:/io -w /io vosk-wasm-builder:${TAG} make -C src
 
+.PHONY: library
 library:
 	npm run --prefix lib build

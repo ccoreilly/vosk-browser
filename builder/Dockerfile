@@ -11,7 +11,7 @@ RUN apt-get update \
     libc6-dev-i386
 
 WORKDIR /opt/kaldi
-RUN git clone -b lookahead-1.8.0 --single-branch https://github.com/alphacep/kaldi . && \
+RUN git clone -b lookahead-1.8.0 --single-branch https://github.com/ccoreilly/kaldi . && \
     git checkout 75ecaef39
 ADD kaldi.patch /tmp
 RUN git apply -v /tmp/kaldi.patch
