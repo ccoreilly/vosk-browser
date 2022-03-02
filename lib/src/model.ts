@@ -15,14 +15,17 @@ import {
   ServerMessageLoadResult,
   ClientMessageCreateRecognizer,
 } from "./interfaces";
+import { Logger } from "./utils/logging";
 
 export class Model extends EventTarget {
   private worker: Worker;
   private _ready: boolean = false;
   private messagePort: MessagePort;
+  private logger: Logger = new Logger();
 
-  constructor(private modelUrl: string) {
+  constructor(private modelUrl: string, logLevel: number = 0) {
     super();
+    this.logger.setLogLevel(logLevel);
     this.worker = new WebWorker();
     this.initialize();
   }
@@ -32,6 +35,14 @@ export class Model extends EventTarget {
       this.handleMessage(event)
     );
 
+    this.postMessage<ClientMessageSet>(
+      {
+        action: "set",
+        key: "logLevel",
+        value: this.logger.getLogLevel()
+      }
+    );
+    
     this.postMessage<ClientMessageLoad>({
       action: "load",
       modelUrl: this.modelUrl,
@@ -68,7 +79,7 @@ export class Model extends EventTarget {
   }
 
   public registerPort(port: MessagePort) {
-    console.debug("Registering port");
+    this.logger.debug("Registering port");
     this.messagePort = port;
     this.messagePort.onmessage = this.forwardMessage.bind(this);
   }
@@ -91,6 +102,17 @@ export class Model extends EventTarget {
       action: "terminate",
     });
     this._ready = false;
+  }
+
+  public setLogLevel(level: number) {
+    this.logger.setLogLevel(level);
+    this.postMessage<ClientMessageSet>(
+      {
+        action: "set",
+        key: "logLevel",
+        value: level
+      }
+    );
   }
 
   /**
@@ -156,7 +178,7 @@ export class Model extends EventTarget {
           );
         }
 
-        console.debug(`Recognizer (id: ${this.id}): Sending audioChunk`);
+        model.logger.debug(`Recognizer (id: ${this.id}): Sending audioChunk`);
         model.postMessage<ClientMessageAudioChunk>(
           {
             action: "audioChunk",
@@ -182,8 +204,8 @@ export class Model extends EventTarget {
 
 export type KaldiRecognizer = InstanceType<Model["KaldiRecognizer"]>;
 
-export async function createModel(modelUrl: string): Promise<Model> {
-  const model = new Model(modelUrl);
+export async function createModel(modelUrl: string, logLevel: number = 0): Promise<Model> {
+  const model = new Model(modelUrl, logLevel);
 
   return new Promise((resolve, reject) =>
     model.on("load", (message: any) => {

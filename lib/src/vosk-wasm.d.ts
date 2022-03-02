@@ -26,7 +26,9 @@ export declare interface Vosk {
   syncFilesystem: (fromPersistent: boolean) => void;
   Model;
   KaldiRecognizer;
+  SetLogLevel(level: number): void;
   _malloc: (size: number) => number;
   _free: (buffer: number) => void;
 }
+
 export default function LoadVosk(): Promise<Vosk>;

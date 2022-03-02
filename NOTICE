@@ -1,5 +1,5 @@
 Vosk-Browser
-Copyright 2020, 2021 Ciaran O'Reilly
+Copyright 2020-2022 Ciaran O'Reilly
 
 The Initial Developer of the the WASM bindings
 (https://github.com/dtreskunov/tiny-kaldi) for the VOSK API is Denis
@@ -8,7 +8,7 @@ Copyright 2020, Denis Treskunov
 
 The Developer of the VOSK API (https://github.com/alphacep/vosk-api) is
 Alpha Cephei Inc (https://alphacephei.com/en/).
-Copyright 2019-2021 Alpha Cephei Inc. All Rights Reserved.
+Copyright 2019-2022 Alpha Cephei Inc. All Rights Reserved.
 
 Licensed under the Apache License, Version 2.0 (the "License"); you may not
 use this file except in compliance with the License. You may obtain a copy

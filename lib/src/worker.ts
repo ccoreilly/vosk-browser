@@ -6,6 +6,7 @@ import {
   ClientMessageSet,
   ClientMessageCreateRecognizer,
 } from "./interfaces";
+import { Logger } from "./utils/logging";
 
 const ctx: Worker = self as any;
 
@@ -22,6 +23,7 @@ export class RecognizerWorker {
   private Vosk: Vosk;
   private model: Model;
   private recognizers = new Map<string, Recognizer>();
+  private logger = new Logger();
 
   constructor() {
     ctx.addEventListener("message", (event) => this.handleMessage(event));
@@ -35,7 +37,7 @@ export class RecognizerWorker {
     }
 
     if (ClientMessage.isLoadMessage(message)) {
-      console.debug(JSON.stringify(message));
+      this.logger.debug(JSON.stringify(message));
       const { modelUrl } = message;
 
       if (!modelUrl) {
@@ -49,7 +51,7 @@ export class RecognizerWorker {
           ctx.postMessage({ event: "load", result });
         })
         .catch((error) => {
-          console.error(error);
+          this.logger.error(error);
           ctx.postMessage({ error: error.message });
         });
 
@@ -106,11 +108,12 @@ export class RecognizerWorker {
           resolve(true);
         })
         .catch((e) => {
-          console.error(e);
+          this.logger.error(e);
         })
     )
       .then(() => {
-        console.debug("Setting up persistent storage at " + storagePath);
+        this.Vosk.SetLogLevel(this.logger.getLogLevel());
+        this.logger.debug("Setting up persistent storage at " + storagePath);
         this.Vosk.FS.mkdir(storagePath);
         this.Vosk.FS.mount(this.Vosk.IDBFS, {}, storagePath);
         return this.Vosk.syncFilesystem(true);
@@ -121,18 +124,18 @@ export class RecognizerWorker {
           modelUrl,
           location.href.replace(/^blob:/, "")
         );
-        console.debug(`Downloading ${fullModelUrl} to ${modelPath}`);
+        this.logger.debug(`Downloading ${fullModelUrl} to ${modelPath}`);
         return this.Vosk.downloadAndExtract(fullModelUrl.toString(), modelPath);
       })
       .then(() => {
-        console.debug(`Syncing filesystem`);
+        this.logger.debug(`Syncing filesystem`);
 
         return this.Vosk.syncFilesystem(false);
       })
       .then(() => {
-        console.debug(`Creating model`);
+        this.logger.debug(`Creating model`);
         this.model = new this.Vosk.Model(modelPath);
-        console.debug(`RecognizerWorker: new Model()`);
+        this.logger.debug(`RecognizerWorker: new Model()`);
       })
       .then(() => {
         return true;
@@ -146,7 +149,7 @@ export class RecognizerWorker {
     this.freeBuffer(recognizer);
     recognizer.buffAddr = this.Vosk._malloc(size);
     recognizer.buffSize = size;
-    console.debug(
+    this.logger.debug(
       `Recognizer (id: ${recognizer.id}): allocated buffer of ${recognizer.buffSize} bytes`
     );
   }
@@ -156,7 +159,7 @@ export class RecognizerWorker {
       return;
     }
     this.Vosk._free(recognizer.buffAddr);
-    console.debug(
+    this.logger.debug(
       `Recognizer (id: ${recognizer.id}): freed buffer of ${recognizer.buffSize} bytes`
     );
     recognizer.buffAddr = undefined;
@@ -168,7 +171,7 @@ export class RecognizerWorker {
     sampleRate,
     grammar,
   }: ClientMessageCreateRecognizer) {
-    console.debug(
+    this.logger.debug(
       `Creating recognizer (id: ${recognizerId}) with sample rate ${sampleRate} and grammar ${grammar}`
     );
     try {
@@ -191,32 +194,40 @@ export class RecognizerWorker {
       });
     } catch (error) {
       const errorMsg = `Recognizer (id: ${recognizerId}): Could not be created due to: ${error}\n${(error as Error)?.stack}`;
-      console.error(errorMsg);
+      this.logger.error(errorMsg);
       return {
         error: errorMsg,
       };
     }
   }
 
-  private async setConfiguration({
-    recognizerId,
-    key,
-    value,
-  }: ClientMessageSet) {
-    console.debug(`Recognizer (id: ${recognizerId}): set ${key} to ${value}`);
-
-    if (!this.recognizers.has(recognizerId)) {
-      console.warn(`Recognizer not ready, ignoring`);
-      return;
-    }
-
-    const recognizer = this.recognizers.get(recognizerId)!;
-
-    if (key === "words") {
-      recognizer.words = value;
-      recognizer.kaldiRecognizer.SetWords(value);
-    } else {
-      console.warn(`Unrecognized key ${key}`);
+  private async setConfiguration(message: ClientMessageSet) {
+    const { key } = message;
+    
+    switch (key) {
+      case "words":
+        const { recognizerId, value } = message;
+        this.logger.debug(`Recognizer (id: ${recognizerId}): set ${key} to ${value}`);
+    
+        if (!this.recognizers.has(recognizerId)) {
+          this.logger.warn(`Recognizer not ready, ignoring`);
+          return;
+        }
+    
+        const recognizer = this.recognizers.get(recognizerId)!;
+        recognizer.words = value;
+        recognizer.kaldiRecognizer.SetWords(value);
+        break;
+      case "logLevel":
+        const level = message.value;
+        this.logger.debug(`Set ${key} to ${level}`);
+        if (this.Vosk) {
+          this.Vosk.SetLogLevel(level);
+        }
+        this.logger.setLogLevel(level);
+        break;
+      default:
+        this.logger.warn(`Unrecognized key ${key}`);
     }
   }
 
@@ -225,12 +236,12 @@ export class RecognizerWorker {
     data,
     sampleRate,
   }: ClientMessageAudioChunk) {
-    console.debug(
+    this.logger.debug(
       `Recognizer (id: ${recognizerId}): process audio chunk with sampleRate ${sampleRate}`
     );
 
     if (!this.recognizers.has(recognizerId)) {
-      console.warn(`Recognizer not ready, ignoring`);
+      this.logger.warn(`Recognizer not ready, ignoring`);
       return {
         error: `Recognizer (id: ${recognizerId}): Not ready`,
       };
@@ -239,7 +250,7 @@ export class RecognizerWorker {
     let recognizer = this.recognizers.get(recognizerId)!;
 
     if (recognizer.sampleRate !== sampleRate) {
-      console.warn(
+      this.logger.warn(
         `Recognizer (id: ${recognizerId}) was created with sampleRate ${recognizer.sampleRate} but audio chunk with sampleRate ${sampleRate} was received! Recreating recognizer...`
       );
 

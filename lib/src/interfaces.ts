@@ -7,12 +7,20 @@ export interface ClientMessageTerminate {
   action: "terminate";
 }
 
-export interface ClientMessageSet {
+export interface ClientMessageRecognizerSet {
   action: "set";
   recognizerId: string;
-  key: string;
-  value: any;
+  key: "words";
+  value: boolean;
 }
+
+export interface ClientMessageGenericSet {
+  action: "set";
+  key: "logLevel";
+  value: number;
+}
+
+export type ClientMessageSet = ClientMessageRecognizerSet | ClientMessageGenericSet;
 
 export interface ClientMessageAudioChunk {
   action: "audioChunk";
