@@ -77,3 +77,6 @@ window.onload = init;
 
 - Write tests
 - Automate npm publish
+- Automate demo publishing
+- Example with speaker model
+- Better documentation

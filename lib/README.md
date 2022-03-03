@@ -105,10 +105,24 @@ A property that specifies if the model is loaded and ready.
 ### Model#KaldiRecognizer
 
 ```typescript
-new KaldiRecognizer(): KaldiRecognizer
+new model.KaldiRecognizer(): KaldiRecognizer
 ```
 
 Creates a new KaldiRecognizer. Multiple recognizers can be created from the same model
+
+### Model#setLogLevel
+
+```typescript
+setLogLevel(level: number): void
+```
+
+Sets the log level:
+-2: Error
+-1: Warning
+0: Info
+1: Verbose
+2: More verbose
+3: Debug
 
 ### Model#terminate
 
@@ -157,6 +171,14 @@ acceptWaveform(buffer: AudioBuffer): void;
 ```
 
 Preprocesses AudioBuffers and transfers them to the Web Worker for inference.
+
+### KaldiRecognizer#setWords
+
+```typescript
+setWords(words: boolean): void;
+```
+
+Return word timestamps in the recognition message
 
 ### KaldiRecognizer#remove
 
