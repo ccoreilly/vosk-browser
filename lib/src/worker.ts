@@ -35,9 +35,10 @@ export class RecognizerWorker {
     if (!message) {
       return;
     }
+    
+    this.logger.debug(JSON.stringify(message));
 
     if (ClientMessage.isLoadMessage(message)) {
-      this.logger.debug(JSON.stringify(message));
       const { modelUrl } = message;
 
       if (!modelUrl) {
@@ -113,7 +114,7 @@ export class RecognizerWorker {
     )
       .then(() => {
         this.Vosk.SetLogLevel(this.logger.getLogLevel());
-        this.logger.debug("Setting up persistent storage at " + storagePath);
+        this.logger.verbose("Setting up persistent storage at " + storagePath);
         this.Vosk.FS.mkdir(storagePath);
         this.Vosk.FS.mount(this.Vosk.IDBFS, {}, storagePath);
         return this.Vosk.syncFilesystem(true);
@@ -124,18 +125,18 @@ export class RecognizerWorker {
           modelUrl,
           location.href.replace(/^blob:/, "")
         );
-        this.logger.debug(`Downloading ${fullModelUrl} to ${modelPath}`);
+        this.logger.verbose(`Downloading ${fullModelUrl} to ${modelPath}`);
         return this.Vosk.downloadAndExtract(fullModelUrl.toString(), modelPath);
       })
       .then(() => {
-        this.logger.debug(`Syncing filesystem`);
+        this.logger.verbose(`Syncing filesystem`);
 
         return this.Vosk.syncFilesystem(false);
       })
       .then(() => {
-        this.logger.debug(`Creating model`);
+        this.logger.verbose(`Creating model`);
         this.model = new this.Vosk.Model(modelPath);
-        this.logger.debug(`RecognizerWorker: new Model()`);
+        this.logger.verbose(`Model created`);
       })
       .then(() => {
         return true;
@@ -171,7 +172,7 @@ export class RecognizerWorker {
     sampleRate,
     grammar,
   }: ClientMessageCreateRecognizer) {
-    this.logger.debug(
+    this.logger.verbose(
       `Creating recognizer (id: ${recognizerId}) with sample rate ${sampleRate} and grammar ${grammar}`
     );
     try {
@@ -207,7 +208,7 @@ export class RecognizerWorker {
     switch (key) {
       case "words":
         const { recognizerId, value } = message;
-        this.logger.debug(`Recognizer (id: ${recognizerId}): set ${key} to ${value}`);
+        this.logger.verbose(`Recognizer (id: ${recognizerId}): set ${key} to ${value}`);
     
         if (!this.recognizers.has(recognizerId)) {
           this.logger.warn(`Recognizer not ready, ignoring`);
@@ -220,7 +221,7 @@ export class RecognizerWorker {
         break;
       case "logLevel":
         const level = message.value;
-        this.logger.debug(`Set ${key} to ${level}`);
+        this.logger.verbose(`Set ${key} to ${level}`);
         if (this.Vosk) {
           this.Vosk.SetLogLevel(level);
         }
@@ -272,8 +273,10 @@ export class RecognizerWorker {
     const requiredSize = data.length * data.BYTES_PER_ELEMENT;
     this.allocateBuffer(requiredSize, recognizer);
     if (recognizer.buffAddr == null) {
+      const error = `Recognizer (id: ${recognizer.id}): Could not allocate buffer`;
+      this.logger.error(error);
       return {
-        error: `Recognizer (id: ${recognizer.id}): Could not allocate buffer`,
+        error
       };
     }
 

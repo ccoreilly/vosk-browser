@@ -27,6 +27,7 @@ export declare interface Vosk {
   Model;
   KaldiRecognizer;
   SetLogLevel(level: number): void;
+  GetLogLevel(): number;
   _malloc: (size: number) => number;
   _free: (buffer: number) => void;
 }

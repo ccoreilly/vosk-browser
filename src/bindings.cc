@@ -109,4 +109,5 @@ EMSCRIPTEN_BINDINGS(vosk) {
         ;
     
     emscripten::function("SetLogLevel", &SetVerboseLevel);
+    emscripten::function("GetLogLevel", &GetVerboseLevel);
 }

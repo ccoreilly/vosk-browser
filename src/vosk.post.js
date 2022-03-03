@@ -10,6 +10,18 @@
     'use strict';
 
     /**
+     * @param {string} message
+     * @param {number} level
+     */
+    function log(message, level) {
+        if (!level) {
+            level = 0
+        }
+        if (Module.GetLogLevel() < level) return;
+        console.log(message);
+    }
+
+    /**
      * When you can't use async/await, use generator control-flow
      * @see http://es6-features.org/#GeneratorControlFlow
      * @param {Generator} generator 
@@ -55,9 +67,9 @@
                     FS.write(file, value, 0, value.length);
                     bytesWritten = bytesWritten + value.length;
                     if (length) {
-                        console.debug(`${Math.round(100*bytesWritten/length)}% (${bytesWritten} of ${length} bytes)`);
+                        log(`${Math.round(100*bytesWritten/length)}% (${bytesWritten} of ${length} bytes)`, 2);
                     } else {
-                        console.debug(`${bytesWritten} bytes`);
+                        log(`${bytesWritten} bytes`, 2);
                     }
                 } else {
                     throw new Error('read() returned value in unexpected format');
@@ -73,7 +85,7 @@
      */
     function download(url, path) {
         return async(function*() {
-            console.debug(`Attempting to download from ${url}`);
+            log(`Attempting to download from ${url}`, 2);
             let response = yield fetch(url);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
@@ -82,10 +94,10 @@
             const lastSlashIdx = path.lastIndexOf('/');
             const dir = path.substring(0, lastSlashIdx);
             if (dir !== '') {
-                console.debug(`Ensuring ${dir} is a valid directory`);
+                log(`Ensuring ${dir} is a valid directory`, 2);
                 FS.mkdirTree(dir);
             }
-            console.debug(`Writing response to ${path}, Content-Length: ${contentLength}`);
+            log(`Writing response to ${path}, Content-Length: ${contentLength}`, 2);
             const file = FS.open(path, 'w');
             try {
                 yield writeStreamToFile(response.body.getReader(), file, contentLength);
@@ -122,13 +134,13 @@
         return async(function*() {
             const extractedOk = localPath + '/extracted.ok';
             if (isFile(extractedOk)) {
-                console.debug(`${localPath} was found cached`);
+                log(`${localPath} was found cached`, 2);
                 return;
             }
             const archivePath = localPath + '/downloaded.tar.gz';
             const downloadedOk = localPath + '/downloaded.ok';
             if (isFile(downloadedOk)) {
-                console.debug(`Archive was found already downloaded to ${localPath}`);
+                log(`Archive was found already downloaded to ${localPath}`, 2);
             } else {
                 yield download(url, archivePath);
                 touchFile(downloadedOk);
@@ -146,8 +158,8 @@
                 if (err) {
                     reject('Failed to sync file system: ' + err);
                 } else {
-                    console.debug('File system synced ' +
-                        (fromPersistent ? 'from host to runtime' : 'from runtime to host'));
+                    log('File system synced ' +
+                        (fromPersistent ? 'from host to runtime' : 'from runtime to host'), 2);
                     resolve();
                 }
             })

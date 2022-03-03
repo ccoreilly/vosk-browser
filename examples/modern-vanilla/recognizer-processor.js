@@ -6,7 +6,7 @@ class RecognizerAudioProcessor extends AudioWorkletProcessor {
     }
     
     _processMessage(event) {
-        console.debug(`Received event ${JSON.stringify(event.data, null, 2)}`);
+        // console.debug(`Received event ${JSON.stringify(event.data, null, 2)}`);
         if (event.data.action === "init") {
             this._recognizerId = event.data.recognizerId;
             this._recognizerPort = event.ports[0];

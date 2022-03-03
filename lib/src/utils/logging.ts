@@ -28,8 +28,13 @@ export class Logger {
         console.info(message)
     }
 
-    public debug(message: string) {
+    public verbose(message: string) {
         if (this.logLevel < 1) return;
+        console.debug(message)
+    }
+
+    public debug(message: string) {
+        if (this.logLevel < 3) return;
         console.debug(message)
     }
 }

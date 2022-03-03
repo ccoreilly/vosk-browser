@@ -79,7 +79,7 @@ export class Model extends EventTarget {
   }
 
   public registerPort(port: MessagePort) {
-    this.logger.debug("Registering port");
+    this.logger.debug(`Registering port ${port}`);
     this.messagePort = port;
     this.messagePort.onmessage = this.forwardMessage.bind(this);
   }
@@ -178,7 +178,7 @@ export class Model extends EventTarget {
           );
         }
 
-        model.logger.debug(`Recognizer (id: ${this.id}): Sending audioChunk`);
+        model.logger.debug(`Recognizer (id: ${this.id}): Sending audioChunk 0=${data[0]} ${data.length}=${data[data.length - 1]}`);
         model.postMessage<ClientMessageAudioChunk>(
           {
             action: "audioChunk",
