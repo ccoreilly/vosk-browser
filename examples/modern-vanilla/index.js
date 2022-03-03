@@ -15,7 +15,7 @@ async function init() {
 
     recognizer.on("result", (message) => {
         const result = message.result;
-        console.log(JSON.stringify(result, null, 2));
+        // console.log(JSON.stringify(result, null, 2));
         
         const newSpan = document.createElement('span');
         newSpan.textContent = `${result.text} `;

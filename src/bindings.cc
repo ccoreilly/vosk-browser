@@ -30,29 +30,30 @@ static Model *makeModel(const std::string &model_path) {
     try {
         return new Model(model_path.c_str());
     } catch (std::exception &e) {
-        printf("Exception in Model ctor: %s\n", e.what());
+        KALDI_ERR << "Exception in Model ctor: " << e.what();
         throw;
     }
 }
 
 static KaldiRecognizer* makeRecognizerWithGrammar(Model *model, float sample_frequency, const std::string &grammar) {
     try {
-        std::printf("Creating model with grammar");
+        KALDI_VLOG(2) << "Creating model with grammar";
         return new KaldiRecognizer(model, sample_frequency, grammar.c_str());
     } catch (std::exception &e) {
-        std::printf("Exception in KaldiRecognizer ctor: %s\n", e.what());
+        KALDI_ERR << "Exception in KaldiRecognizer ctor: " << e.what();
         throw;
     }
 }
 
 static void KaldiRecognizer_SetWords(KaldiRecognizer &self, int words) {
-    std::printf("Setting words to %s\n", words ? "true" : "false");
+    KALDI_VLOG(2) << "Setting words to " << words;
     self.SetWords(words);
 }
 
 static bool KaldiRecognizer_AcceptWaveform(KaldiRecognizer &self, long jsHeapAddr, int len) {
     const float *fdata = (const float*) jsHeapAddr;
-    // std::printf("AcceptWaveform received len=%d 0=%f %d=%f\n", len, fdata[0], len-1, fdata[len-1]);
+    KALDI_VLOG(3) << "AcceptWaveform received len=" << len << " 0=" << fdata[0] << " " << len-1 << "=" << fdata[len-1];
+    
     return self.KaldiRecognizer::AcceptWaveform(fdata, len);
 }
 
@@ -105,5 +106,8 @@ EMSCRIPTEN_BINDINGS(vosk) {
         .function("Result", &KaldiRecognizer_Result)
         .function("FinalResult", &KaldiRecognizer_FinalResult)
         .function("PartialResult", &KaldiRecognizer_PartialResult)
-        ;    
+        ;
+    
+    emscripten::function("SetLogLevel", &SetVerboseLevel);
+    emscripten::function("GetLogLevel", &GetVerboseLevel);
 }
