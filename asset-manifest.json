@@ -1,0 +1,24 @@
+{
+  "files": {
+    "main.css": "/vosk-browser/static/css/main.af9e7fec.chunk.css",
+    "main.js": "/vosk-browser/static/js/main.fcc31215.chunk.js",
+    "main.js.map": "/vosk-browser/static/js/main.fcc31215.chunk.js.map",
+    "runtime-main.js": "/vosk-browser/static/js/runtime-main.9682b701.js",
+    "runtime-main.js.map": "/vosk-browser/static/js/runtime-main.9682b701.js.map",
+    "static/css/2.9d3b5bd8.chunk.css": "/vosk-browser/static/css/2.9d3b5bd8.chunk.css",
+    "static/js/2.adf471ab.chunk.js": "/vosk-browser/static/js/2.adf471ab.chunk.js",
+    "static/js/2.adf471ab.chunk.js.map": "/vosk-browser/static/js/2.adf471ab.chunk.js.map",
+    "index.html": "/vosk-browser/index.html",
+    "static/css/2.9d3b5bd8.chunk.css.map": "/vosk-browser/static/css/2.9d3b5bd8.chunk.css.map",
+    "static/css/main.af9e7fec.chunk.css.map": "/vosk-browser/static/css/main.af9e7fec.chunk.css.map",
+    "static/js/2.adf471ab.chunk.js.LICENSE.txt": "/vosk-browser/static/js/2.adf471ab.chunk.js.LICENSE.txt",
+    "static/js/main.fcc31215.chunk.js.LICENSE.txt": "/vosk-browser/static/js/main.fcc31215.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.9682b701.js",
+    "static/css/2.9d3b5bd8.chunk.css",
+    "static/js/2.adf471ab.chunk.js",
+    "static/css/main.af9e7fec.chunk.css",
+    "static/js/main.fcc31215.chunk.js"
+  ]
+}
