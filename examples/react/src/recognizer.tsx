@@ -68,6 +68,7 @@ export const Recognizer: React.FunctionComponent = () => {
 
     setLoadedModel({ model, path });
     const recognizer = new model.KaldiRecognizer(48000);
+    recognizer.setWords(true);
     recognizer.on("result", (message: any) => {
       const result: VoskResult = message.result;
       setUtterances((utt: VoskResult[]) => [...utt, result]);
