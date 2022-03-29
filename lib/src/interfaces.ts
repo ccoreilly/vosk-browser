@@ -94,11 +94,13 @@ export interface ServerMessageLoadResult {
 
 export interface ServerMessageError {
   event: "error";
+  recognizerId?: string;
   error: string;
 }
 
 export interface ServerMessageResult {
   event: "result";
+  recognizerId: string;
   result: {
     result: Array<{
       conf: number;
@@ -111,6 +113,7 @@ export interface ServerMessageResult {
 }
 export interface ServerMessagePartialResult {
   event: "partialresult";
+  recognizerId: string;
   result: {
     partial: string;
   };
@@ -127,19 +130,20 @@ export namespace ModelMessage {
 }
 export type RecognizerMessage =
   | ServerMessagePartialResult
-  | ServerMessageResult;
+  | ServerMessageResult
+  | ServerMessageError;
 
 export type RecognizerEvent = RecognizerMessage["event"];
 
 export type ServerMessage = ModelMessage | RecognizerMessage;
 
 export namespace ServerMessage {
-  export function isRecognizerMessage(message: ServerMessage): boolean {
-    return ["result", "partialresult"].includes(message.event);
+  export function isRecognizerMessage(message: ServerMessage): message is RecognizerMessage {
+    return ["result", "partialresult"].includes(message.event) || Reflect.has(message, 'recognizerId');
   }
 
   export function isResult(message: any): message is ServerMessageResult {
-    return message?.result?.text != null;
+    return message?.result?.text != null || message?.result?.result != null;
   }
 
   export function isPartialResult(

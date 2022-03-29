@@ -22,6 +22,7 @@ export class Model extends EventTarget {
   private _ready: boolean = false;
   private messagePort: MessagePort;
   private logger: Logger = new Logger();
+  private recognizers = new Map<string, KaldiRecognizer>();
 
   constructor(private modelUrl: string, logLevel: number = 0) {
     super();
@@ -51,7 +52,7 @@ export class Model extends EventTarget {
 
   private postMessage<T = ClientMessage>(
     message: T,
-    options?: PostMessageOptions
+    options?: StructuredSerializeOptions
   ) {
     this.worker.postMessage(message, options);
   }
@@ -63,7 +64,16 @@ export class Model extends EventTarget {
         this._ready = message.result;
       }
 
-      this.dispatchEvent(new CustomEvent(message.event, { detail: message }));
+      const event = new CustomEvent(message.event, { detail: message });
+      if (ServerMessage.isRecognizerMessage(message) && message.recognizerId) {
+        const recognizer = this.recognizers.get(message.recognizerId);
+        if (recognizer) {
+          recognizer.dispatchEvent(event);
+          return;
+        }
+      }
+
+      this.dispatchEvent(event);
     }
   }
 
@@ -115,6 +125,14 @@ export class Model extends EventTarget {
     );
   }
 
+  public registerRecognizer(recognizer: KaldiRecognizer) {
+    this.recognizers.set(recognizer.id, recognizer);
+  }
+
+  public unregisterRecognizer(recognizerId: string) {
+    this.recognizers.delete(recognizerId);
+  }
+
   /**
    * KaldiRecognizer anonymous class
    */
@@ -129,6 +147,9 @@ export class Model extends EventTarget {
             "Cannot create KaldiRecognizer. Model is either not ready or has been terminated"
           );
         }
+
+        model.registerRecognizer(this);
+
         model.postMessage<ClientMessageCreateRecognizer>({
           action: "create",
           recognizerId: this.id,
@@ -141,10 +162,8 @@ export class Model extends EventTarget {
         event: RecognizerEvent,
         listener: (message: RecognizerMessage) => void
       ) {
-        model.addEventListener(event, (event: any) => {
-          if (event.detail && ServerMessage.isRecognizerMessage(event.detail)) {
-            listener(event.detail);
-          }
+        this.addEventListener(event, (event: any) => {
+          listener(event?.detail);
         });
       }
 
@@ -193,6 +212,8 @@ export class Model extends EventTarget {
       }
 
       public remove(): void {
+        model.unregisterRecognizer(this.id);
+
         model.postMessage<ClientMessageRemoveRecognizer>({
           action: "remove",
           recognizerId: this.id,
