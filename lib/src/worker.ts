@@ -43,6 +43,7 @@ export class RecognizerWorker {
 
       if (!modelUrl) {
         ctx.postMessage({
+          event: "error",
           error: "Missing modelUrl parameter",
         });
       }
@@ -53,7 +54,7 @@ export class RecognizerWorker {
         })
         .catch((error) => {
           this.logger.error(error);
-          ctx.postMessage({ error: error.message });
+          ctx.postMessage({ event: "error", error: error.message });
         });
 
       return;
@@ -69,7 +70,7 @@ export class RecognizerWorker {
         .then((result) => {
           ctx.postMessage(result);
         })
-        .catch((error) => ctx.postMessage({ event: "error", error }));
+        .catch((error) => ctx.postMessage({ event: "error", recognizerId: message.recognizerId, error: error.message }));
       return;
     }
 
@@ -78,7 +79,7 @@ export class RecognizerWorker {
         .then((result) => {
           ctx.postMessage(result);
         })
-        .catch((error) => ctx.postMessage({ event: "error", error }));
+        .catch((error) => ctx.postMessage({ event: "error", recognizerId: message.recognizerId, error: error.message }));
       return;
     }
 
@@ -87,7 +88,7 @@ export class RecognizerWorker {
         .then((result) => {
           ctx.postMessage(result);
         })
-        .catch((error) => ctx.postMessage({ event: "error", error }));
+        .catch((error) => ctx.postMessage({ event: "error", recognizerId: message.recognizerId, error: error.message }));
       return;
     }
 
@@ -96,7 +97,7 @@ export class RecognizerWorker {
       return;
     }
 
-    ctx.postMessage({ error: `Unknown message ${JSON.stringify(message)}` });
+    ctx.postMessage({ event: "error", error: `Unknown message ${JSON.stringify(message)}` });
   }
 
   private async load(modelUrl: string): Promise<boolean> {
@@ -110,6 +111,7 @@ export class RecognizerWorker {
         })
         .catch((e) => {
           this.logger.error(e);
+          reject(e);
         })
     )
       .then(() => {
@@ -196,9 +198,7 @@ export class RecognizerWorker {
     } catch (error) {
       const errorMsg = `Recognizer (id: ${recognizerId}): Could not be created due to: ${error}\n${(error as Error)?.stack}`;
       this.logger.error(errorMsg);
-      return {
-        error: errorMsg,
-      };
+      throw new Error(errorMsg);
     }
   }
 
@@ -242,10 +242,8 @@ export class RecognizerWorker {
     );
 
     if (!this.recognizers.has(recognizerId)) {
-      this.logger.warn(`Recognizer not ready, ignoring`);
-      return {
-        error: `Recognizer (id: ${recognizerId}): Not ready`,
-      };
+      this.logger.error(`Recognizer (id: ${recognizerId}) not ready, ignoring`);
+      throw new Error(`Recognizer (id: ${recognizerId}): Not ready`);
     }
 
     let recognizer = this.recognizers.get(recognizerId)!;
@@ -275,9 +273,7 @@ export class RecognizerWorker {
     if (recognizer.buffAddr == null) {
       const error = `Recognizer (id: ${recognizer.id}): Could not allocate buffer`;
       this.logger.error(error);
-      return {
-        error
-      };
+      throw new Error(error);
     }
 
     this.Vosk.HEAPF32.set(data, recognizer.buffAddr / data.BYTES_PER_ELEMENT);
@@ -327,7 +323,11 @@ export class RecognizerWorker {
 
   private async terminate() {
     for (const recognizer of this.recognizers.values()) {
-      await this.removeRecognizer(recognizer.id);
+      try {
+        await this.removeRecognizer(recognizer.id);
+      } catch (error) {
+        this.logger.warn(`Recognizer (id: ${recognizer.id}) could not be removed. Ignoring as we are terminating.`)
+      } 
     }
     this.model.delete();
     close();

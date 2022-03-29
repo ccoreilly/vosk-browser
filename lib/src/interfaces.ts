@@ -94,6 +94,7 @@ export interface ServerMessageLoadResult {
 
 export interface ServerMessageError {
   event: "error";
+  recognizerId?: string;
   error: string;
 }
 
@@ -129,7 +130,8 @@ export namespace ModelMessage {
 }
 export type RecognizerMessage =
   | ServerMessagePartialResult
-  | ServerMessageResult;
+  | ServerMessageResult
+  | ServerMessageError;
 
 export type RecognizerEvent = RecognizerMessage["event"];
 
