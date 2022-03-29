@@ -64,7 +64,7 @@ export class Model extends EventTarget {
         this._ready = message.result;
       }
 
-      const event = new CustomEvent(message.event, { detail: message, ...message });
+      const event = new CustomEvent(message.event, { detail: message });
       if (ServerMessage.isRecognizerMessage(message) && message.recognizerId) {
         const recognizer = this.recognizers.get(message.recognizerId);
         if (recognizer) {
@@ -129,6 +129,10 @@ export class Model extends EventTarget {
     this.recognizers.set(recognizer.id, recognizer);
   }
 
+  public unregisterRecognizer(recognizerId: string) {
+    this.recognizers.delete(recognizerId);
+  }
+
   /**
    * KaldiRecognizer anonymous class
    */
@@ -159,9 +163,7 @@ export class Model extends EventTarget {
         listener: (message: RecognizerMessage) => void
       ) {
         this.addEventListener(event, (event: any) => {
-          if (event.detail && ServerMessage.isRecognizerMessage(event.detail)) {
-            listener(event.detail);
-          }
+          listener(event?.detail);
         });
       }
 
@@ -210,6 +212,8 @@ export class Model extends EventTarget {
       }
 
       public remove(): void {
+        model.unregisterRecognizer(this.id);
+
         model.postMessage<ClientMessageRemoveRecognizer>({
           action: "remove",
           recognizerId: this.id,
