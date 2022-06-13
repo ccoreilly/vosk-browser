@@ -32,7 +32,7 @@ RUN CXXFLAGS=-O3 LDFLAGS=-O3 emconfigure ./configure --use-cuda=no --static --st
 RUN EMMAKEN_CFLAGS="-r -s ERROR_ON_UNDEFINED_SYMBOLS=0 -Wl,--allow-undefined" emmake make -j $(nproc)
 
 WORKDIR /tmp/zlib
-RUN curl --fail -q -L https://zlib.net/zlib-1.2.11.tar.gz | \
+RUN curl --fail -q -L https://zlib.net/zlib-1.2.12.tar.gz | \
     tar xz --strip-components=1
 RUN emconfigure ./configure --prefix=/opt
 RUN emmake make -j $(nproc)
