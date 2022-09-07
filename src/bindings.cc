@@ -3,7 +3,7 @@
 
 #include <emscripten/bind.h>
 #include "utils.h"
-#include "../vosk/src/kaldi_recognizer.h"
+#include "../vosk/src/recognizer.h"
 #include "../vosk/src/model.h"
 #include "../vosk/src/spk_model.h"
 
@@ -35,45 +35,45 @@ static Model *makeModel(const std::string &model_path) {
     }
 }
 
-static KaldiRecognizer* makeRecognizerWithGrammar(Model *model, float sample_frequency, const std::string &grammar) {
+static Recognizer* makeRecognizerWithGrammar(Model *model, float sample_frequency, const std::string &grammar) {
     try {
         KALDI_VLOG(2) << "Creating model with grammar";
-        return new KaldiRecognizer(model, sample_frequency, grammar.c_str());
+        return new Recognizer(model, sample_frequency, grammar.c_str());
     } catch (std::exception &e) {
-        KALDI_ERR << "Exception in KaldiRecognizer ctor: " << e.what();
+        KALDI_ERR << "Exception in Recognizer ctor: " << e.what();
         throw;
     }
 }
 
-static void KaldiRecognizer_SetWords(KaldiRecognizer &self, int words) {
+static void Recognizer_SetWords(Recognizer &self, int words) {
     KALDI_VLOG(2) << "Setting words to " << words;
     self.SetWords(words);
 }
 
-static bool KaldiRecognizer_AcceptWaveform(KaldiRecognizer &self, long jsHeapAddr, int len) {
+static bool Recognizer_AcceptWaveform(Recognizer &self, long jsHeapAddr, int len) {
     const float *fdata = (const float*) jsHeapAddr;
     KALDI_VLOG(3) << "AcceptWaveform received len=" << len << " 0=" << fdata[0] << " " << len-1 << "=" << fdata[len-1];
     
-    return self.KaldiRecognizer::AcceptWaveform(fdata, len);
+    return self.Recognizer::AcceptWaveform(fdata, len);
 }
 
-static string KaldiRecognizer_Result(KaldiRecognizer &self) {
+static string Recognizer_Result(Recognizer &self) {
     std::string s;
-    s += self.KaldiRecognizer::Result();
+    s += self.Recognizer::Result();
     
     return s;
 }
 
-static string KaldiRecognizer_FinalResult(KaldiRecognizer &self) {
+static string Recognizer_FinalResult(Recognizer &self) {
     std::string s;
-    s += self.KaldiRecognizer::FinalResult();
+    s += self.Recognizer::FinalResult();
     
     return s;
 }
 
-static string KaldiRecognizer_PartialResult(KaldiRecognizer &self) {
+static string Recognizer_PartialResult(Recognizer &self) {
     std::string s;
-    s += self.KaldiRecognizer::PartialResult();
+    s += self.Recognizer::PartialResult();
     
     return s;
 }
@@ -98,14 +98,14 @@ EMSCRIPTEN_BINDINGS(vosk) {
         .constructor<const char *>()
         ;
 
-    class_<KaldiRecognizer>("KaldiRecognizer")
+    class_<Recognizer>("Recognizer")
         .constructor(&makeRecognizerWithGrammar, allow_raw_pointers())
         .constructor<Model *, float>(allow_raw_pointers())
-        .function("SetWords", &KaldiRecognizer_SetWords)
-        .function("AcceptWaveform", &KaldiRecognizer_AcceptWaveform)
-        .function("Result", &KaldiRecognizer_Result)
-        .function("FinalResult", &KaldiRecognizer_FinalResult)
-        .function("PartialResult", &KaldiRecognizer_PartialResult)
+        .function("SetWords", &Recognizer_SetWords)
+        .function("AcceptWaveform", &Recognizer_AcceptWaveform)
+        .function("Result", &Recognizer_Result)
+        .function("FinalResult", &Recognizer_FinalResult)
+        .function("PartialResult", &Recognizer_PartialResult)
         ;
     
     emscripten::function("SetLogLevel", &SetVerboseLevel);

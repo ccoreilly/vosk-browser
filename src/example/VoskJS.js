@@ -315,7 +315,7 @@ var VoskJS = (function() {
                         postMessage({result: JSON.parse(this._recognizer.FinalResult())})
                         this._recognizer.delete()
                         this._recognizer = null
-                        console.debug('RecognizerWorker: ~KaldiRecognizer()')
+                        console.debug('RecognizerWorker: ~Recognizer()')
                     }
                     if (this._model) {
                         this._model.delete()
@@ -348,8 +348,8 @@ var VoskJS = (function() {
         }
         processAudioChunk({data, sampleRate, duration}) {
             if (this._recognizer === null) {
-                this._recognizer = new this._Vosk.KaldiRecognizer(this._model, sampleRate)
-                console.debug(`RecognizerWorker: new KaldiRecognizer (sampleRate=${sampleRate})`)
+                this._recognizer = new this._Vosk.Recognizer(this._model, sampleRate)
+                console.debug(`RecognizerWorker: new Recognizer (sampleRate=${sampleRate})`)
             }
             const requiredSize = data.length * data.BYTES_PER_ELEMENT
             this._allocateBuffer(requiredSize)
