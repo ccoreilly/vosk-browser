@@ -1,8 +1,8 @@
 diff --git a/src/Makefile b/src/Makefile
-index c50810297..4eb626551 100644
+index 69aebdb26..bd66c91eb 100644
 --- a/src/Makefile
 +++ b/src/Makefile
-@@ -31,7 +31,7 @@ include kaldi.mk
+@@ -41,7 +41,7 @@ KALDI_SONAME ?= libkaldi.so
  
  # Reset the default goal, so that the all target will become default
  .DEFAULT_GOAL :=
@@ -12,13 +12,13 @@ index c50810297..4eb626551 100644
  
  mklibdir:
 diff --git a/src/configure b/src/configure
-index d6079d8a0..1518c33eb 100755
+index c74d67af8..cf1f8cdd0 100755
 --- a/src/configure
 +++ b/src/configure
-@@ -958,6 +958,33 @@ if $android ; then
-   cat makefiles/android_openblas.mk >> kaldi.mk
+@@ -1022,6 +1022,34 @@ if $android ; then
  
    echo "Successfully configured for Android with OpenBLAS from $OPENBLASROOT."
+ 
 +elif [ "$(basename $CC)" == "emcc" ]; then
 +  # emscripten (WebAssembly)
 +
@@ -46,9 +46,10 @@ index d6079d8a0..1518c33eb 100755
 +  cat makefiles/wasm_clapack.mk >> kaldi.mk
 +  echo "Warning (CLAPACK): this part of the configure process is not properly tested and may not work."
 +  echo "Successfully configured for WebAssembly with CLAPACK libs from $CLAPACKROOT"
- 
++
  elif [ "`uname`" == "Darwin" ]; then
    # Check for Darwin first, because we later call uname -o (for Cygwin)
+   # which crashes on Darwin.
 diff --git a/src/ivector/ivector-extractor.cc b/src/ivector/ivector-extractor.cc
 index c3a122281..1ad75599d 100644
 --- a/src/ivector/ivector-extractor.cc
@@ -75,11 +76,10 @@ index c3a122281..1ad75599d 100644
    KALDI_LOG << "Done.";
  }
 diff --git a/src/makefiles/default_rules.mk b/src/makefiles/default_rules.mk
-index 42d4e9d12..de11a1913 100644
+index 3ae5ed5e2..cb56051af 100644
 --- a/src/makefiles/default_rules.mk
 +++ b/src/makefiles/default_rules.mk
-@@ -1,6 +1,10 @@
- 
+@@ -1,5 +1,9 @@
  SHELL := /bin/bash
  
 +ifeq ($(notdir ${CC}), emcc)
@@ -89,7 +89,7 @@ index 42d4e9d12..de11a1913 100644
  ifeq ($(KALDI_FLAVOR), dynamic)
    ifeq ($(shell uname), Darwin)
      ifdef ANDROIDINC # cross-compiling enabled on host MacOS
-@@ -26,6 +30,11 @@ ifeq ($(KALDI_FLAVOR), dynamic)
+@@ -31,6 +35,11 @@ ifeq ($(KALDI_FLAVOR), dynamic)
      $(error Dynamic libraries not supported on this platform. Run configure with --static flag.)
    endif
    XDEPENDS =
@@ -101,31 +101,33 @@ index 42d4e9d12..de11a1913 100644
  else
    ifdef LIBNAME
      LIBFILE = $(LIBNAME).a
-@@ -33,14 +42,22 @@ else
+@@ -38,14 +47,22 @@ else
    XDEPENDS = $(ADDLIBS)
  endif
  
-+ifdef IS_EMSCRIPTEN
-+all: $(LIBFILE)
-+else
- all: $(LIBFILE) $(BINFILES)
+-all: $(LIBFILE) $(BINFILES)
 -
++ifdef IS_EMSCRIPTEN
++  all: $(LIBFILE)
++else
++  all: $(LIBFILE) $(BINFILES)
 +endif
  
  ifdef LIBNAME
  
+-$(LIBNAME).a: $(OBJFILES)
 +ifdef IS_EMSCRIPTEN
-+$(LIBNAME).bc: $(OBJFILES)
++  $(LIBNAME).bc: $(OBJFILES)
 +	$(CXX) -o $(LIBNAME).bc $(OBJFILES)
 +else
- $(LIBNAME).a: $(OBJFILES)
++  $(LIBNAME).a: $(OBJFILES)
  	$(AR) -cr $(LIBNAME).a $(OBJFILES)
  	$(RANLIB) $(LIBNAME).a
 +endif
  
  ifeq ($(KALDI_FLAVOR), dynamic)
  # the LIBFILE is not the same as $(LIBNAME).a
-@@ -78,11 +95,14 @@ endif
+@@ -87,11 +104,14 @@ endif
  %.a:
  	$(MAKE) -C ${@D} ${@F}
  
@@ -143,20 +145,20 @@ index 42d4e9d12..de11a1913 100644
  	-rm -f .depend.mk
 diff --git a/src/makefiles/wasm_clapack.mk b/src/makefiles/wasm_clapack.mk
 new file mode 100644
-index 000000000..7bd5a9f83
+index 000000000..fc10b9e9c
 --- /dev/null
 +++ b/src/makefiles/wasm_clapack.mk
 @@ -0,0 +1,32 @@
 +# WebAssembly/CLAPACK configuration
 +
 +ifndef DOUBLE_PRECISION
-+$(error DOUBLE_PRECISION not defined.)
++  $(error DOUBLE_PRECISION not defined.)
 +endif
 +ifndef OPENFSTINC
-+$(error OPENFSTINC not defined.)
++  $(error OPENFSTINC not defined.)
 +endif
 +ifndef OPENFSTLIBS
-+$(error OPENFSTLIBS not defined.)
++  $(error OPENFSTLIBS not defined.)
 +endif
 +
 +CXXFLAGS = -std=c++17 -I.. -I$(OPENFSTINC) $(EXTRA_CXXFLAGS) \
@@ -179,9 +181,8 @@ index 000000000..7bd5a9f83
 +
 +LDFLAGS = $(EXTRA_LDFLAGS) $(OPENFSTLDFLAGS) -g
 +LDLIBS = $(EXTRA_LDLIBS) $(OPENFSTLIBS) $(CLAPACKLIBS) -lm # -lpthread -ldl
-\ No newline at end of file
 diff --git a/tools/Makefile b/tools/Makefile
-index eb07f7ad7..2c561f6fd 100644
+index 1ab7bbb8d..54113b5db 100644
 --- a/tools/Makefile
 +++ b/tools/Makefile
 @@ -78,11 +78,12 @@ else ifeq ($(OS),Windows_NT)
@@ -197,7 +198,7 @@ index eb07f7ad7..2c561f6fd 100644
 +		git apply -v ../openfst.patch && \
          autoreconf -i && \
  	./configure --prefix=`pwd` $(OPENFST_CONFIGURE) CXX="$(CXX)" \
- 		CXXFLAGS="$(CXXFLAGS) $(openfst_add_CXXFLAGS)" \
+ 		CXXFLAGS="$(openfst_add_CXXFLAGS) $(CXXFLAGS)" \
 diff --git a/tools/extras/check_dependencies.sh b/tools/extras/check_dependencies.sh
 index 155a376b6..97d9b2ff9 100755
 --- a/tools/extras/check_dependencies.sh
@@ -217,7 +218,7 @@ index 155a376b6..97d9b2ff9 100755
      echo "$0: $f is not installed."
 diff --git a/tools/openfst.patch b/tools/openfst.patch
 new file mode 100644
-index 000000000..80d607fdd
+index 000000000..3d016dc28
 --- /dev/null
 +++ b/tools/openfst.patch
 @@ -0,0 +1,45 @@

@@ -1,4 +1,4 @@
-import LoadVosk, { Vosk, KaldiRecognizer, Model } from "./vosk-wasm";
+import LoadVosk, * as VoskWasm from "./vosk-wasm";
 
 import {
   ClientMessage,
@@ -14,14 +14,14 @@ export interface Recognizer {
   id: string;
   buffAddr?: number;
   buffSize?: number;
-  kaldiRecognizer: KaldiRecognizer;
+  recognizer: VoskWasm.Recognizer;
   sampleRate: number;
   words?: boolean;
   grammar?: string;
 }
 export class RecognizerWorker {
-  private Vosk: Vosk;
-  private model: Model;
+  private Vosk: VoskWasm.Vosk;
+  private model: VoskWasm.Model;
   private recognizers = new Map<string, Recognizer>();
   private logger = new Logger();
 
@@ -178,20 +178,20 @@ export class RecognizerWorker {
       `Creating recognizer (id: ${recognizerId}) with sample rate ${sampleRate} and grammar ${grammar}`
     );
     try {
-      let kaldiRecognizer: KaldiRecognizer;
+      let recognizer: VoskWasm.Recognizer;
       if (grammar) {
-        kaldiRecognizer = new this.Vosk.KaldiRecognizer(
+        recognizer = new this.Vosk.Recognizer(
           this.model,
           sampleRate,
           grammar
         );
       } else {
-        kaldiRecognizer = new this.Vosk.KaldiRecognizer(this.model, sampleRate);
+        recognizer = new this.Vosk.Recognizer(this.model, sampleRate);
       }
 
       this.recognizers.set(recognizerId, {
         id: recognizerId,
-        kaldiRecognizer,
+        recognizer,
         sampleRate,
         grammar,
       });
@@ -217,7 +217,7 @@ export class RecognizerWorker {
     
         const recognizer = this.recognizers.get(recognizerId)!;
         recognizer.words = value;
-        recognizer.kaldiRecognizer.SetWords(value);
+        recognizer.recognizer.SetWords(value);
         break;
       case "logLevel":
         const level = message.value;
@@ -263,7 +263,7 @@ export class RecognizerWorker {
       const newRecognizer = this.recognizers.get(recognizerId)!;
       if (recognizer.words) {
         newRecognizer.words = true;
-        newRecognizer.kaldiRecognizer.SetWords(true);
+        newRecognizer.recognizer.SetWords(true);
       }
       recognizer = newRecognizer;
     }
@@ -279,12 +279,12 @@ export class RecognizerWorker {
     this.Vosk.HEAPF32.set(data, recognizer.buffAddr / data.BYTES_PER_ELEMENT);
     let json;
     if (
-      recognizer.kaldiRecognizer.AcceptWaveform(
+      recognizer.recognizer.AcceptWaveform(
         recognizer.buffAddr,
         data.length
       )
     ) {
-      json = recognizer.kaldiRecognizer.Result();
+      json = recognizer.recognizer.Result();
 
       return {
         event: "result",
@@ -292,7 +292,7 @@ export class RecognizerWorker {
         result: JSON.parse(json),
       };
     } else {
-      json = recognizer.kaldiRecognizer.PartialResult();
+      json = recognizer.recognizer.PartialResult();
       return {
         event: "partialresult",
         recognizerId: recognizer.id,
@@ -309,9 +309,9 @@ export class RecognizerWorker {
     }
 
     const recognizer = this.recognizers.get(recognizerId)!;
-    const finalResult = recognizer.kaldiRecognizer.FinalResult();
+    const finalResult = recognizer.recognizer.FinalResult();
     this.freeBuffer(recognizer);
-    recognizer.kaldiRecognizer.delete();
+    recognizer.recognizer.delete();
     this.recognizers.delete(recognizerId);
 
     return {

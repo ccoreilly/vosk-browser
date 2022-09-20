@@ -3,7 +3,7 @@ export declare class Model {
   public delete(): void;
 }
 
-export declare class KaldiRecognizer {
+export declare class Recognizer {
   constructor(model: Model, sampleRate: number);
   constructor(model: Model, sampleRate: number, grammar: string);
   public SetWords(words: boolean): void;
@@ -25,7 +25,7 @@ export declare interface Vosk {
   downloadAndExtract: (url: string, localPath: string) => void;
   syncFilesystem: (fromPersistent: boolean) => void;
   Model;
-  KaldiRecognizer;
+  Recognizer;
   SetLogLevel(level: number): void;
   GetLogLevel(): number;
   _malloc: (size: number) => number;

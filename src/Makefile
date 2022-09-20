@@ -67,7 +67,7 @@ LIBS = \
 SRC = \
 	$(SRC_ROOT)/bindings.cc \
 	$(SRC_ROOT)/utils.cc \
-	$(VOSK_ROOT)/src/kaldi_recognizer.cc \
+	$(VOSK_ROOT)/src/recognizer.cc \
 	$(VOSK_ROOT)/src/model.cc \
 	$(VOSK_ROOT)/src/spk_model.cc \
 	$(VOSK_ROOT)/src/vosk_api.cc \
