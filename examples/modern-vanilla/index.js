@@ -10,7 +10,7 @@ async function init() {
 
     const sampleRate = 48000;
     
-    const recognizer = new model.KaldiRecognizer(sampleRate);
+    const recognizer = new model.Recognizer(sampleRate);
     recognizer.setWords(true);
 
     recognizer.on("result", (message) => {
