@@ -92,8 +92,8 @@ export class RecognizerWorker {
       return;
     }
 
-    if (ClientMessage.isRecognizerSendResultsMessage(message)) {
-      this.sendResults(message.recognizerId)
+    if (ClientMessage.isRecognizerRetrieveFinalResultMessage(message)) {
+      this.retrieveFinalResult(message.recognizerId)
         .then((result) => {
           ctx.postMessage(result);
         })
@@ -310,7 +310,7 @@ export class RecognizerWorker {
     }
   }
 
-  private async sendResults(recognizerId: string) {
+  private async retrieveFinalResult(recognizerId: string) {
     if (!this.recognizers.has(recognizerId)) {
       throw new Error(
         `Recognizer (id: ${recognizerId}): Does not exist or has already been deleted`

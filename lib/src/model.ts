@@ -9,7 +9,7 @@ import {
   ClientMessageLoad,
   ClientMessageRemoveRecognizer,
   ClientMessageCreateRecognizer,
-  ClientMessageSendResults,
+  ClientMessageRetrieveFinalResult,
   ModelMessage,
   RecognizerEvent,
   RecognizerMessage,
@@ -211,9 +211,9 @@ export class Model extends EventTarget {
         );
       }
 
-      public sendResults(): void {
-        model.postMessage<ClientMessageSendResults>({
-          action: "sendResults",
+      public retrieveFinalResult(): void {
+        model.postMessage<ClientMessageRetrieveFinalResult>({
+          action: "retrieveFinalResult",
           recognizerId: this.id,
         });
       }
