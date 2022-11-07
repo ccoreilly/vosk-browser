@@ -36,6 +36,11 @@ export interface ClientMessageCreateRecognizer {
   grammar?: string;
 }
 
+export interface ClientMessageRetrieveFinalResult {
+  action: "retrieveFinalResult";
+  recognizerId: string;
+}
+
 export interface ClientMessageRemoveRecognizer {
   action: "remove";
   recognizerId: string;
@@ -47,6 +52,7 @@ export type ClientMessage =
   | ClientMessageCreateRecognizer
   | ClientMessageAudioChunk
   | ClientMessageSet
+  | ClientMessageRetrieveFinalResult
   | ClientMessageRemoveRecognizer;
 
 export namespace ClientMessage {
@@ -78,6 +84,12 @@ export namespace ClientMessage {
     message: ClientMessage
   ): message is ClientMessageCreateRecognizer {
     return message?.action === "create";
+  }
+
+  export function isRecognizerRetrieveFinalResultMessage(
+    message: ClientMessage
+  ): message is ClientMessageRetrieveFinalResult {
+    return message?.action === "retrieveFinalResult";
   }
 
   export function isRecognizerRemoveMessage(

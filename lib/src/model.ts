@@ -8,12 +8,12 @@ import {
   ClientMessageTerminate,
   ClientMessageLoad,
   ClientMessageRemoveRecognizer,
+  ClientMessageCreateRecognizer,
+  ClientMessageRetrieveFinalResult,
   ModelMessage,
   RecognizerEvent,
   RecognizerMessage,
   ServerMessage,
-  ServerMessageLoadResult,
-  ClientMessageCreateRecognizer,
 } from "./interfaces";
 import { Logger } from "./utils/logging";
 
@@ -209,6 +209,13 @@ export class Model extends EventTarget {
             transfer: [data.buffer],
           }
         );
+      }
+
+      public retrieveFinalResult(): void {
+        model.postMessage<ClientMessageRetrieveFinalResult>({
+          action: "retrieveFinalResult",
+          recognizerId: this.id,
+        });
       }
 
       public remove(): void {

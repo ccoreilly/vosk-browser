@@ -92,6 +92,15 @@ export class RecognizerWorker {
       return;
     }
 
+    if (ClientMessage.isRecognizerRetrieveFinalResultMessage(message)) {
+      this.retrieveFinalResult(message.recognizerId)
+        .then((result) => {
+          ctx.postMessage(result);
+        })
+        .catch((error) => ctx.postMessage({ event: "error", recognizerId: message.recognizerId, error: error.message }));
+      return;
+    }
+
     if (ClientMessage.isTerminateMessage(message)) {
       this.terminate();
       return;
@@ -299,6 +308,22 @@ export class RecognizerWorker {
         result: JSON.parse(json),
       };
     }
+  }
+
+  private async retrieveFinalResult(recognizerId: string) {
+    if (!this.recognizers.has(recognizerId)) {
+      throw new Error(
+        `Recognizer (id: ${recognizerId}): Does not exist or has already been deleted`
+      );
+    }
+    const recognizer = this.recognizers.get(recognizerId)!;
+    const finalResult = recognizer.recognizer.FinalResult();
+
+    return {
+      event: "result",
+      recognizerId,
+      result: JSON.parse(finalResult),
+    };
   }
 
   private async removeRecognizer(recognizerId: string) {
