@@ -45,6 +45,10 @@ export const models: Array<{ name: string; path: string }> = [
     path: "vosk-model-small-es-0.3.tar.gz",
   },
   {
+    name: "Esperanto",
+    path: "vosk-model-small-eo-0.42.tar.gz",
+  },
+  {
     name: "Farsi",
     path: "vosk-model-small-fa-0.4.tar.gz",
   },
