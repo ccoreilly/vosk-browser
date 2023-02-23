@@ -6,9 +6,10 @@ index 69aebdb26..bd66c91eb 100644
  
  # Reset the default goal, so that the all target will become default
  .DEFAULT_GOAL :=
+ .PHONY: all mklibdir rmlibdir checkversion
 -all: $(SUBDIRS) matrix/test
 +all: $(SUBDIRS) #matrix/test
- 	-echo Done
+ 	@echo Done
  
  mklibdir:
 diff --git a/src/configure b/src/configure
@@ -227,9 +228,9 @@ index 000000000..3d016dc28
 +--- a/configure.ac
 ++++ b/configure.ac
 +@@ -149,40 +149,6 @@ AC_ARG_WITH([libfstdir],
-+ 
++
 + AC_SUBST([libfstdir], $with_libfstdir)
-+ 
++
 +-# Flags may be changed after configuring, so this is checked again by
 +-# weight_test.cc.  The check here is to save time in the common case,
 +-# or when someone does not run `make check`.
@@ -266,4 +267,4 @@ index 000000000..3d016dc28
 +-
 + AC_CHECK_LIB([dl], dlopen, [DL_LIBS=-ldl])
 + AC_SUBST([DL_LIBS])
-+ 
++
