@@ -15,7 +15,7 @@ builder:
 	-t ${REPOSITORY}vosk-wasm-builder:latest builder
 	
 push-builder: builder
-	docker push ${REPOSITORY}vosk-wasm-builder:${BUILDER_TAG}
+	docker push --all-tags ${REPOSITORY}vosk-wasm-builder
 	
 .PHONY: binary
 binary:
