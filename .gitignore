@@ -1,3 +1,4 @@
 build
 kaldi
 openfst*
+clapack-wasm

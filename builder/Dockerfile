@@ -12,7 +12,7 @@ RUN apt-get update \
 
 WORKDIR /opt/kaldi
 RUN git clone -b vosk --single-branch https://github.com/alphacep/kaldi . && \
-    git checkout 6417ac1dece94783e80dfbac0148604685d27579
+    git checkout 173438905ccd96195982ccdc0195dc03e66cb1da
 ADD kaldi.patch /tmp
 RUN git apply -v /tmp/kaldi.patch
 
@@ -22,7 +22,8 @@ RUN emmake make -j $(nproc) CXXFLAGS="-O3 -r" LDFLAGS=-O3 OPENFST_CONFIGURE="--e
 RUN find . -type f -path '*/.libs/*.a' -exec sh -xc 'mv {} $(dirname {})/..' \;
 
 WORKDIR /opt/kaldi/tools/clapack-wasm
-RUN git clone https://gitlab.inria.fr/kaldi.web/clapack-wasm.git .
+RUN git clone -b master --single-branch https://github.com/ccoreilly/clapack-wasm . && \
+    git checkout a24a1c96415b1f39053be724012512d02bef904d
 ADD clapack-wasm.patch /tmp
 RUN git apply -v /tmp/clapack-wasm.patch
 RUN make 

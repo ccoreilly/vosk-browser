@@ -1,6 +1,6 @@
 MAKEFILE_ROOT := $(realpath $(dir $(firstword $(MAKEFILE_LIST))))
 ENV := 
-BUILDER_TAG ?= 0.0.6
+BUILDER_TAG ?= 0.0.7
 REPOSITORY = ghcr.io/ccoreilly/
 
 ifdef DEBUG
@@ -9,7 +9,10 @@ endif
 
 .PHONY: builder
 builder:
-	docker build --progress=plain -f builder/Dockerfile -t ${REPOSITORY}vosk-wasm-builder:${BUILDER_TAG} builder
+	docker build --progress=plain -f builder/Dockerfile \
+	--cache-from ${REPOSITORY}vosk-wasm-builder:latest \
+	-t ${REPOSITORY}vosk-wasm-builder:${BUILDER_TAG} \
+	-t ${REPOSITORY}vosk-wasm-builder:latest builder
 	
 push-builder: builder
 	docker push ${REPOSITORY}vosk-wasm-builder:${BUILDER_TAG}
