@@ -17,7 +17,7 @@ export interface Recognizer {
   recognizer: VoskWasm.Recognizer;
   sampleRate: number;
   words?: boolean;
-  max_alternatives?: number;
+  maxAlternatives?: number;
   grammar?: string;
 }
 export class RecognizerWorker {
@@ -233,14 +233,12 @@ export class RecognizerWorker {
       case "maxAlternatives": {
         const { recognizerId, value } = message;
         this.logger.verbose(`Recognizer (id: ${recognizerId}): set ${key} to ${value}`);
-    
         if (!this.recognizers.has(recognizerId)) {
           this.logger.warn(`Recognizer not ready, ignoring`);
           return;
         }
-    
         const recognizer = this.recognizers.get(recognizerId)!;
-        recognizer.max_alternatives = value;
+        recognizer.maxAlternatives = value;
         recognizer.recognizer.SetMaxAlternatives(value);
       } break;
 
@@ -272,12 +270,12 @@ export class RecognizerWorker {
     }
 
     let recognizer = this.recognizers.get(recognizerId)!;
-
+    
     if (recognizer.sampleRate !== sampleRate) {
       this.logger.warn(
         `Recognizer (id: ${recognizerId}) was created with sampleRate ${recognizer.sampleRate} but audio chunk with sampleRate ${sampleRate} was received! Recreating recognizer...`
       );
-
+      
       await this.createRecognizer({
         action: "create",
         recognizerId,
@@ -286,9 +284,14 @@ export class RecognizerWorker {
       });
 
       const newRecognizer = this.recognizers.get(recognizerId)!;
-      if (recognizer.words) {
-        newRecognizer.words = true;
-        newRecognizer.recognizer.SetWords(true);
+
+      if ('words' in recognizer) {
+        newRecognizer.words = recognizer.words;
+        newRecognizer.recognizer.SetWords(recognizer.words!);
+      }
+      if('maxAlternatives' in recognizer){
+        newRecognizer.maxAlternatives = recognizer.maxAlternatives;
+        newRecognizer.recognizer.SetMaxAlternatives(recognizer.maxAlternatives!);
       }
       recognizer = newRecognizer;
     }
@@ -310,7 +313,7 @@ export class RecognizerWorker {
       )
     ) {
       json = recognizer.recognizer.Result();
-
+      
       return {
         event: "result",
         recognizerId: recognizer.id,
