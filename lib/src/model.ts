@@ -178,6 +178,17 @@ export class Model extends EventTarget {
         );
       }
 
+      public setMaxAlternatives(max_alternatives: number): void {
+        model.postMessage<ClientMessageSet>(
+          {
+            action: "set",
+            recognizerId: this.id,
+            key: "maxAlternatives",
+            value: max_alternatives
+          }
+        );
+      }
+
       public acceptWaveform(buffer: AudioBuffer): void {
         if (buffer.numberOfChannels < 1) {
           throw new Error(`AudioBuffer should contain at least one channel`);

@@ -7,11 +7,18 @@ export interface ClientMessageTerminate {
   action: "terminate";
 }
 
-export interface ClientMessageRecognizerSet {
+export interface ClientMessageRecognizerSetWords {
   action: "set";
   recognizerId: string;
   key: "words";
   value: boolean;
+}
+
+export interface ClientMessageRecognizerSetMaxAlternatives {
+  action: "set";
+  recognizerId: string;
+  key: "maxAlternatives";
+  value: number;
 }
 
 export interface ClientMessageGenericSet {
@@ -20,7 +27,7 @@ export interface ClientMessageGenericSet {
   value: number;
 }
 
-export type ClientMessageSet = ClientMessageRecognizerSet | ClientMessageGenericSet;
+export type ClientMessageSet = ClientMessageRecognizerSetWords | ClientMessageRecognizerSetMaxAlternatives | ClientMessageGenericSet;
 
 export interface ClientMessageAudioChunk {
   action: "audioChunk";

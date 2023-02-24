@@ -17,6 +17,7 @@ export interface Recognizer {
   recognizer: VoskWasm.Recognizer;
   sampleRate: number;
   words?: boolean;
+  maxAlternatives?: number;
   grammar?: string;
 }
 export class RecognizerWorker {
@@ -215,7 +216,7 @@ export class RecognizerWorker {
     const { key } = message;
     
     switch (key) {
-      case "words":
+      case "words": {
         const { recognizerId, value } = message;
         this.logger.verbose(`Recognizer (id: ${recognizerId}): set ${key} to ${value}`);
     
@@ -227,15 +228,28 @@ export class RecognizerWorker {
         const recognizer = this.recognizers.get(recognizerId)!;
         recognizer.words = value;
         recognizer.recognizer.SetWords(value);
-        break;
-      case "logLevel":
+      } break;
+
+      case "maxAlternatives": {
+        const { recognizerId, value } = message;
+        this.logger.verbose(`Recognizer (id: ${recognizerId}): set ${key} to ${value}`);
+        if (!this.recognizers.has(recognizerId)) {
+          this.logger.warn(`Recognizer not ready, ignoring`);
+          return;
+        }
+        const recognizer = this.recognizers.get(recognizerId)!;
+        recognizer.maxAlternatives = value;
+        recognizer.recognizer.SetMaxAlternatives(value);
+      } break;
+
+      case "logLevel":{
         const level = message.value;
         this.logger.verbose(`Set ${key} to ${level}`);
         if (this.Vosk) {
           this.Vosk.SetLogLevel(level);
         }
         this.logger.setLogLevel(level);
-        break;
+      } break;
       default:
         this.logger.warn(`Unrecognized key ${key}`);
     }
@@ -256,12 +270,12 @@ export class RecognizerWorker {
     }
 
     let recognizer = this.recognizers.get(recognizerId)!;
-
+    
     if (recognizer.sampleRate !== sampleRate) {
       this.logger.warn(
         `Recognizer (id: ${recognizerId}) was created with sampleRate ${recognizer.sampleRate} but audio chunk with sampleRate ${sampleRate} was received! Recreating recognizer...`
       );
-
+      
       await this.createRecognizer({
         action: "create",
         recognizerId,
@@ -270,9 +284,14 @@ export class RecognizerWorker {
       });
 
       const newRecognizer = this.recognizers.get(recognizerId)!;
-      if (recognizer.words) {
-        newRecognizer.words = true;
-        newRecognizer.recognizer.SetWords(true);
+
+      if ('words' in recognizer) {
+        newRecognizer.words = recognizer.words;
+        newRecognizer.recognizer.SetWords(recognizer.words!);
+      }
+      if('maxAlternatives' in recognizer){
+        newRecognizer.maxAlternatives = recognizer.maxAlternatives;
+        newRecognizer.recognizer.SetMaxAlternatives(recognizer.maxAlternatives!);
       }
       recognizer = newRecognizer;
     }
@@ -294,7 +313,7 @@ export class RecognizerWorker {
       )
     ) {
       json = recognizer.recognizer.Result();
-
+      
       return {
         event: "result",
         recognizerId: recognizer.id,
