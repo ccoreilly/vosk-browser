@@ -101,16 +101,17 @@ export const Recognizer: React.FunctionComponent = () => {
         <FileUpload recognizer={recognizer} loading={loading} ready={ready} />
       </Header>
       <ResultContainer>
-        {utterances.map((utt, uindex) =>
-          utt?.result?.map((word, windex) => (
-            <Word
-              key={`${uindex}-${windex}`}
-              confidence={word.conf}
-              title={`Confidence: ${(word.conf * 100).toFixed(2)}%`}
-            >
-              {word.word}{" "}
-            </Word>
-          ))
+        {utterances.map(
+          (utt, uindex) =>
+            utt?.result?.map((word, windex) => (
+              <Word
+                key={`${uindex}-${windex}`}
+                confidence={word.conf}
+                title={`Confidence: ${(word.conf * 100).toFixed(2)}%`}
+              >
+                {word.word}{" "}
+              </Word>
+            )),
         )}
         <span key="partial">{partial}</span>
       </ResultContainer>

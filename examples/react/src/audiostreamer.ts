@@ -2,7 +2,10 @@ import { Duplex, DuplexOptions } from "readable-stream";
 import { KaldiRecognizer } from "vosk-browser";
 
 export class AudioStreamer extends Duplex {
-  constructor(public recognizer: KaldiRecognizer, options?: DuplexOptions) {
+  constructor(
+    public recognizer: KaldiRecognizer,
+    options?: DuplexOptions,
+  ) {
     super(options);
   }
 

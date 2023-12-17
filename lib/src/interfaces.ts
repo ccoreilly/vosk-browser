@@ -20,7 +20,9 @@ export interface ClientMessageGenericSet {
   value: number;
 }
 
-export type ClientMessageSet = ClientMessageRecognizerSet | ClientMessageGenericSet;
+export type ClientMessageSet =
+  | ClientMessageRecognizerSet
+  | ClientMessageGenericSet;
 
 export interface ClientMessageAudioChunk {
   action: "audioChunk";
@@ -57,43 +59,43 @@ export type ClientMessage =
 
 export namespace ClientMessage {
   export function isTerminateMessage(
-    message: ClientMessage
+    message: ClientMessage,
   ): message is ClientMessageTerminate {
     return message?.action === "terminate";
   }
 
   export function isLoadMessage(
-    message: ClientMessage
+    message: ClientMessage,
   ): message is ClientMessageLoad {
     return message?.action === "load";
   }
 
   export function isSetMessage(
-    message: ClientMessage
+    message: ClientMessage,
   ): message is ClientMessageSet {
     return message?.action === "set";
   }
 
   export function isAudioChunkMessage(
-    message: ClientMessage
+    message: ClientMessage,
   ): message is ClientMessageAudioChunk {
     return message?.action === "audioChunk";
   }
 
   export function isRecognizerCreateMessage(
-    message: ClientMessage
+    message: ClientMessage,
   ): message is ClientMessageCreateRecognizer {
     return message?.action === "create";
   }
 
   export function isRecognizerRetrieveFinalResultMessage(
-    message: ClientMessage
+    message: ClientMessage,
   ): message is ClientMessageRetrieveFinalResult {
     return message?.action === "retrieveFinalResult";
   }
 
   export function isRecognizerRemoveMessage(
-    message: ClientMessage
+    message: ClientMessage,
   ): message is ClientMessageRemoveRecognizer {
     return message?.action === "remove";
   }
@@ -135,7 +137,7 @@ export type ModelMessage = ServerMessageLoadResult | ServerMessageError;
 
 export namespace ModelMessage {
   export function isLoadResult(
-    message: any
+    message: any,
   ): message is ServerMessageLoadResult {
     return message?.event === "load";
   }
@@ -150,8 +152,13 @@ export type RecognizerEvent = RecognizerMessage["event"];
 export type ServerMessage = ModelMessage | RecognizerMessage;
 
 export namespace ServerMessage {
-  export function isRecognizerMessage(message: ServerMessage): message is RecognizerMessage {
-    return ["result", "partialresult"].includes(message.event) || Reflect.has(message, 'recognizerId');
+  export function isRecognizerMessage(
+    message: ServerMessage,
+  ): message is RecognizerMessage {
+    return (
+      ["result", "partialresult"].includes(message.event) ||
+      Reflect.has(message, "recognizerId")
+    );
   }
 
   export function isResult(message: any): message is ServerMessageResult {
@@ -159,7 +166,7 @@ export namespace ServerMessage {
   }
 
   export function isPartialResult(
-    message: any
+    message: any,
   ): message is ServerMessagePartialResult {
     return message?.result?.partial != null;
   }

@@ -1,6 +1,6 @@
 import { v4 as uuid } from "uuid";
 
-import WebWorker from "web-worker:./worker.ts";
+import WebWorker from "web-worker:./vosk-worker.ts";
 import {
   ClientMessage,
   ClientMessageSet,
@@ -17,6 +17,9 @@ import {
 } from "./interfaces";
 import { Logger } from "./utils/logging";
 
+import init, { change_range } from "../../../vosk-browser-helper/pkg";
+init();
+
 export class Model extends EventTarget {
   private worker: Worker;
   private _ready: boolean = false;
@@ -24,7 +27,10 @@ export class Model extends EventTarget {
   private logger: Logger = new Logger();
   private recognizers = new Map<string, KaldiRecognizer>();
 
-  constructor(private modelUrl: string, logLevel: number = 0) {
+  constructor(
+    private modelUrl: string,
+    logLevel: number = 0,
+  ) {
     super();
     this.logger.setLogLevel(logLevel);
     this.worker = new WebWorker();
@@ -33,17 +39,15 @@ export class Model extends EventTarget {
 
   private initialize() {
     this.worker.addEventListener("message", (event) =>
-      this.handleMessage(event)
+      this.handleMessage(event),
     );
 
-    this.postMessage<ClientMessageSet>(
-      {
-        action: "set",
-        key: "logLevel",
-        value: this.logger.getLogLevel()
-      }
-    );
-    
+    this.postMessage<ClientMessageSet>({
+      action: "set",
+      key: "logLevel",
+      value: this.logger.getLogLevel(),
+    });
+
     this.postMessage<ClientMessageLoad>({
       action: "load",
       modelUrl: this.modelUrl,
@@ -52,7 +56,7 @@ export class Model extends EventTarget {
 
   private postMessage<T = ClientMessage>(
     message: T,
-    options?: StructuredSerializeOptions
+    options?: StructuredSerializeOptions,
   ) {
     this.worker.postMessage(message, options);
   }
@@ -79,7 +83,7 @@ export class Model extends EventTarget {
 
   public on(
     event: ModelMessage["event"],
-    listener: (message: ModelMessage) => void
+    listener: (message: ModelMessage) => void,
   ) {
     this.addEventListener(event, (event: any) => {
       if (event.detail && !ServerMessage.isRecognizerMessage(event.detail)) {
@@ -116,13 +120,11 @@ export class Model extends EventTarget {
 
   public setLogLevel(level: number) {
     this.logger.setLogLevel(level);
-    this.postMessage<ClientMessageSet>(
-      {
-        action: "set",
-        key: "logLevel",
-        value: level
-      }
-    );
+    this.postMessage<ClientMessageSet>({
+      action: "set",
+      key: "logLevel",
+      value: level,
+    });
   }
 
   public registerRecognizer(recognizer: KaldiRecognizer) {
@@ -144,7 +146,7 @@ export class Model extends EventTarget {
         super();
         if (!model.ready) {
           throw new Error(
-            "Cannot create KaldiRecognizer. Model is either not ready or has been terminated"
+            "Cannot create KaldiRecognizer. Model is either not ready or has been terminated",
           );
         }
 
@@ -160,7 +162,7 @@ export class Model extends EventTarget {
 
       public on(
         event: RecognizerEvent,
-        listener: (message: RecognizerMessage) => void
+        listener: (message: RecognizerMessage) => void,
       ) {
         this.addEventListener(event, (event: any) => {
           listener(event?.detail);
@@ -168,14 +170,12 @@ export class Model extends EventTarget {
       }
 
       public setWords(words: boolean): void {
-        model.postMessage<ClientMessageSet>(
-          {
-            action: "set",
-            recognizerId: this.id,
-            key: "words",
-            value: words
-          }
-        );
+        model.postMessage<ClientMessageSet>({
+          action: "set",
+          recognizerId: this.id,
+          key: "words",
+          value: words,
+        });
       }
 
       public acceptWaveform(buffer: AudioBuffer): void {
@@ -186,18 +186,26 @@ export class Model extends EventTarget {
         this.acceptWaveformFloat(buffer.getChannelData(0), buffer.sampleRate);
       }
 
-      public acceptWaveformFloat(buffer: Float32Array, sampleRate: number): void {
+      public acceptWaveformFloat(
+        buffer: Float32Array,
+        sampleRate: number,
+      ): void {
         // AudioBuffer samples are represented as floating point numbers between -1.0 and 1.0 whilst
         // Kaldi expects them to be between -32768 and 32767 (the range of a signed int16)
         // Should this be handled by the library (better in the C codebase) or left to the end-user to decide?
-        const data = buffer.map((value) => value * 0x8000);
+        // const data = buffer.map((value) => value * 0x8000);
+        const data = change_range(buffer);
         if (!(data instanceof Float32Array)) {
           throw new Error(
-            `Channel data is not a Float32Array as expected: ${data}`
+            `Channel data is not a Float32Array as expected: ${data}`,
           );
         }
 
-        model.logger.debug(`Recognizer (id: ${this.id}): Sending audioChunk 0=${data[0]} ${data.length}=${data[data.length - 1]}`);
+        model.logger.debug(
+          `Recognizer (id: ${this.id}): Sending audioChunk 0=${data[0]} ${
+            data.length
+          }=${data[data.length - 1]}`,
+        );
         model.postMessage<ClientMessageAudioChunk>(
           {
             action: "audioChunk",
@@ -207,7 +215,7 @@ export class Model extends EventTarget {
           },
           {
             transfer: [data.buffer],
-          }
+          },
         );
       }
 
@@ -232,7 +240,10 @@ export class Model extends EventTarget {
 
 export type KaldiRecognizer = InstanceType<Model["KaldiRecognizer"]>;
 
-export async function createModel(modelUrl: string, logLevel: number = 0): Promise<Model> {
+export async function createModel(
+  modelUrl: string,
+  logLevel: number = 0,
+): Promise<Model> {
   const model = new Model(modelUrl, logLevel);
 
   return new Promise((resolve, reject) =>
@@ -241,6 +252,6 @@ export async function createModel(modelUrl: string, logLevel: number = 0): Promi
         resolve(model);
       }
       reject();
-    })
+    }),
   );
 }

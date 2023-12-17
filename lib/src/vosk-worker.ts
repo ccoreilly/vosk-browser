@@ -35,7 +35,7 @@ export class RecognizerWorker {
     if (!message) {
       return;
     }
-    
+
     this.logger.debug(JSON.stringify(message));
 
     if (ClientMessage.isLoadMessage(message)) {
@@ -70,7 +70,13 @@ export class RecognizerWorker {
         .then((result) => {
           ctx.postMessage(result);
         })
-        .catch((error) => ctx.postMessage({ event: "error", recognizerId: message.recognizerId, error: error.message }));
+        .catch((error) =>
+          ctx.postMessage({
+            event: "error",
+            recognizerId: message.recognizerId,
+            error: error.message,
+          }),
+        );
       return;
     }
 
@@ -79,7 +85,13 @@ export class RecognizerWorker {
         .then((result) => {
           ctx.postMessage(result);
         })
-        .catch((error) => ctx.postMessage({ event: "error", recognizerId: message.recognizerId, error: error.message }));
+        .catch((error) =>
+          ctx.postMessage({
+            event: "error",
+            recognizerId: message.recognizerId,
+            error: error.message,
+          }),
+        );
       return;
     }
 
@@ -88,7 +100,13 @@ export class RecognizerWorker {
         .then((result) => {
           ctx.postMessage(result);
         })
-        .catch((error) => ctx.postMessage({ event: "error", recognizerId: message.recognizerId, error: error.message }));
+        .catch((error) =>
+          ctx.postMessage({
+            event: "error",
+            recognizerId: message.recognizerId,
+            error: error.message,
+          }),
+        );
       return;
     }
 
@@ -97,7 +115,13 @@ export class RecognizerWorker {
         .then((result) => {
           ctx.postMessage(result);
         })
-        .catch((error) => ctx.postMessage({ event: "error", recognizerId: message.recognizerId, error: error.message }));
+        .catch((error) =>
+          ctx.postMessage({
+            event: "error",
+            recognizerId: message.recognizerId,
+            error: error.message,
+          }),
+        );
       return;
     }
 
@@ -106,7 +130,10 @@ export class RecognizerWorker {
       return;
     }
 
-    ctx.postMessage({ event: "error", error: `Unknown message ${JSON.stringify(message)}` });
+    ctx.postMessage({
+      event: "error",
+      error: `Unknown message ${JSON.stringify(message)}`,
+    });
   }
 
   private async load(modelUrl: string): Promise<boolean> {
@@ -121,7 +148,7 @@ export class RecognizerWorker {
         .catch((e) => {
           this.logger.error(e);
           reject(e);
-        })
+        }),
     )
       .then(() => {
         this.Vosk.SetLogLevel(this.logger.getLogLevel());
@@ -134,7 +161,7 @@ export class RecognizerWorker {
         // TODO parse Url
         const fullModelUrl = new URL(
           modelUrl,
-          location.href.replace(/^blob:/, "")
+          location.href.replace(/^blob:/, ""),
         );
         this.logger.verbose(`Downloading ${fullModelUrl} to ${modelPath}`);
         return this.Vosk.downloadAndExtract(fullModelUrl.toString(), modelPath);
@@ -162,7 +189,7 @@ export class RecognizerWorker {
     recognizer.buffAddr = this.Vosk._malloc(size);
     recognizer.buffSize = size;
     this.logger.debug(
-      `Recognizer (id: ${recognizer.id}): allocated buffer of ${recognizer.buffSize} bytes`
+      `Recognizer (id: ${recognizer.id}): allocated buffer of ${recognizer.buffSize} bytes`,
     );
   }
 
@@ -172,7 +199,7 @@ export class RecognizerWorker {
     }
     this.Vosk._free(recognizer.buffAddr);
     this.logger.debug(
-      `Recognizer (id: ${recognizer.id}): freed buffer of ${recognizer.buffSize} bytes`
+      `Recognizer (id: ${recognizer.id}): freed buffer of ${recognizer.buffSize} bytes`,
     );
     recognizer.buffAddr = undefined;
     recognizer.buffSize = undefined;
@@ -184,16 +211,12 @@ export class RecognizerWorker {
     grammar,
   }: ClientMessageCreateRecognizer) {
     this.logger.verbose(
-      `Creating recognizer (id: ${recognizerId}) with sample rate ${sampleRate} and grammar ${grammar}`
+      `Creating recognizer (id: ${recognizerId}) with sample rate ${sampleRate} and grammar ${grammar}`,
     );
     try {
       let recognizer: VoskWasm.Recognizer;
       if (grammar) {
-        recognizer = new this.Vosk.Recognizer(
-          this.model,
-          sampleRate,
-          grammar
-        );
+        recognizer = new this.Vosk.Recognizer(this.model, sampleRate, grammar);
       } else {
         recognizer = new this.Vosk.Recognizer(this.model, sampleRate);
       }
@@ -205,7 +228,9 @@ export class RecognizerWorker {
         grammar,
       });
     } catch (error) {
-      const errorMsg = `Recognizer (id: ${recognizerId}): Could not be created due to: ${error}\n${(error as Error)?.stack}`;
+      const errorMsg = `Recognizer (id: ${recognizerId}): Could not be created due to: ${error}\n${(
+        error as Error
+      )?.stack}`;
       this.logger.error(errorMsg);
       throw new Error(errorMsg);
     }
@@ -213,17 +238,19 @@ export class RecognizerWorker {
 
   private async setConfiguration(message: ClientMessageSet) {
     const { key } = message;
-    
+
     switch (key) {
       case "words":
         const { recognizerId, value } = message;
-        this.logger.verbose(`Recognizer (id: ${recognizerId}): set ${key} to ${value}`);
-    
+        this.logger.verbose(
+          `Recognizer (id: ${recognizerId}): set ${key} to ${value}`,
+        );
+
         if (!this.recognizers.has(recognizerId)) {
           this.logger.warn(`Recognizer not ready, ignoring`);
           return;
         }
-    
+
         const recognizer = this.recognizers.get(recognizerId)!;
         recognizer.words = value;
         recognizer.recognizer.SetWords(value);
@@ -247,7 +274,7 @@ export class RecognizerWorker {
     sampleRate,
   }: ClientMessageAudioChunk) {
     this.logger.debug(
-      `Recognizer (id: ${recognizerId}): process audio chunk with sampleRate ${sampleRate}`
+      `Recognizer (id: ${recognizerId}): process audio chunk with sampleRate ${sampleRate}`,
     );
 
     if (!this.recognizers.has(recognizerId)) {
@@ -259,7 +286,7 @@ export class RecognizerWorker {
 
     if (recognizer.sampleRate !== sampleRate) {
       this.logger.warn(
-        `Recognizer (id: ${recognizerId}) was created with sampleRate ${recognizer.sampleRate} but audio chunk with sampleRate ${sampleRate} was received! Recreating recognizer...`
+        `Recognizer (id: ${recognizerId}) was created with sampleRate ${recognizer.sampleRate} but audio chunk with sampleRate ${sampleRate} was received! Recreating recognizer...`,
       );
 
       await this.createRecognizer({
@@ -288,10 +315,7 @@ export class RecognizerWorker {
     this.Vosk.HEAPF32.set(data, recognizer.buffAddr / data.BYTES_PER_ELEMENT);
     let json;
     if (
-      recognizer.recognizer.AcceptWaveform(
-        recognizer.buffAddr,
-        data.length
-      )
+      recognizer.recognizer.AcceptWaveform(recognizer.buffAddr, data.length)
     ) {
       json = recognizer.recognizer.Result();
 
@@ -313,7 +337,7 @@ export class RecognizerWorker {
   private async retrieveFinalResult(recognizerId: string) {
     if (!this.recognizers.has(recognizerId)) {
       throw new Error(
-        `Recognizer (id: ${recognizerId}): Does not exist or has already been deleted`
+        `Recognizer (id: ${recognizerId}): Does not exist or has already been deleted`,
       );
     }
     const recognizer = this.recognizers.get(recognizerId)!;
@@ -329,7 +353,7 @@ export class RecognizerWorker {
   private async removeRecognizer(recognizerId: string) {
     if (!this.recognizers.has(recognizerId)) {
       throw new Error(
-        `Recognizer (id: ${recognizerId}): Does not exist or has already been deleted`
+        `Recognizer (id: ${recognizerId}): Does not exist or has already been deleted`,
       );
     }
 
@@ -351,8 +375,10 @@ export class RecognizerWorker {
       try {
         await this.removeRecognizer(recognizer.id);
       } catch (error) {
-        this.logger.warn(`Recognizer (id: ${recognizer.id}) could not be removed. Ignoring as we are terminating.`)
-      } 
+        this.logger.warn(
+          `Recognizer (id: ${recognizer.id}) could not be removed. Ignoring as we are terminating.`,
+        );
+      }
     }
     this.model.delete();
     close();

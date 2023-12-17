@@ -5,7 +5,7 @@
   "main": "./dist/vosk.js",
   "module": "./dist/vosk.js",
   "scripts": {
-    "build": "rollup -c",
+    "build": "rollup -c && cp ../../vosk-browser-helper/pkg/vosk_browser_helper_bg.wasm ./dist && cp src/vosk.wasm ./dist",
     "clean": "rm -rf ./node_modules && rm -rf ./dist"
   },
   "keywords": [
@@ -22,6 +22,7 @@
   },
   "license": "Apache-2.0",
   "dependencies": {
+    "@rollup/plugin-wasm": "^6.2.2",
     "uuid": "9.0.0"
   },
   "devDependencies": {
