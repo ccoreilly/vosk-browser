@@ -20,6 +20,10 @@ import { Logger } from "./utils/logging";
 import init, { change_range } from "../../../vosk-browser-helper/pkg";
 init();
 
+if (false) {
+  new WebWorker();
+}
+
 export class Model extends EventTarget {
   private worker: Worker;
   private _ready: boolean = false;
@@ -33,7 +37,11 @@ export class Model extends EventTarget {
   ) {
     super();
     this.logger.setLogLevel(logLevel);
-    this.worker = new WebWorker();
+    if (window.Worker) {
+      this.worker = new Worker(
+        /* webpackChunkName: "vosk-worker" */ new URL('./vosk-worker.js', import.meta.url)
+      );
+    }
     this.initialize();
   }
 
