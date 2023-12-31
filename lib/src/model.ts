@@ -38,11 +38,18 @@ export class Model extends EventTarget {
     super();
     this.logger.setLogLevel(logLevel);
     if (window.Worker) {
-      this.worker = new Worker(
-        /* webpackChunkName: "vosk-worker" */ new URL('./vosk-worker.js', import.meta.url)
-      );
-    }
-    this.initialize();
+      fetch(new URL('./vosk-worker.js', import.meta.url).toString(), { mode: "cors" })
+      .then(response => response.blob())
+      .then(blob => {
+        const blobURL = URL.createObjectURL(blob);
+        this.worker =new Worker(blobURL , {name: new URL('./vosk.wasm', import.meta.url).toString()});
+        URL.revokeObjectURL(blobURL);
+        this.initialize()
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  }
   }
 
   private initialize() {
