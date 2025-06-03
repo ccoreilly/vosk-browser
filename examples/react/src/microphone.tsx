@@ -2,10 +2,23 @@ import { Button } from "antd";
 import { AudioMutedOutlined, AudioOutlined } from "@ant-design/icons";
 import MicrophoneStream from "microphone-stream";
 import React, { useCallback, useEffect, useState } from "react";
-
 import { AudioStreamer } from "./audiostreamer";
 import { audioBucket } from "./audiobucket";
 import { KaldiRecognizer } from "vosk-browser";
+
+// Polyfill process for browser - fixes process.nextTick errors
+if (typeof globalThis.process === 'undefined') {
+  globalThis.process = {
+    env: {},
+    nextTick: function (cb: (...args: any[]) => void, ...args: any[]) {
+      return Promise.resolve().then(() => cb(...args));
+    }
+  } as any;
+} else if (typeof globalThis.process.nextTick !== 'function') {
+  globalThis.process.nextTick = function (cb: (...args: any[]) => void, ...args: any[]) {
+    return Promise.resolve().then(() => cb(...args));
+  };
+}
 
 interface Props {
   recognizer: KaldiRecognizer | undefined;

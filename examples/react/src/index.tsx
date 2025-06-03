@@ -1,7 +1,7 @@
 import "antd/dist/antd.min.css";
 
 import React from "react";
-import ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import styled from "styled-components";
 
 import "./index.css";
@@ -13,8 +13,10 @@ const Wrapper = styled.div`
   margin: auto;
   justify-content: center;
 `;
-
-ReactDOM.render(
+//
+const container = document.getElementById("root");
+const root = createRoot(container!);
+root.render(
   <React.StrictMode>
     <Wrapper>
       <h1>Vosk-Browser Speech Recognition Demo</h1>
@@ -43,6 +45,5 @@ ReactDOM.render(
         under Apache 2.0 license.
       </p>
     </Wrapper>
-  </React.StrictMode>,
-  document.getElementById("root")
+  </React.StrictMode>
 );
