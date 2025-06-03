@@ -13,7 +13,7 @@ const Wrapper = styled.div`
   margin: auto;
   justify-content: center;
 `;
-
+//
 const container = document.getElementById("root");
 const root = createRoot(container!);
 root.render(

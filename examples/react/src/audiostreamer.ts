@@ -1,7 +1,7 @@
 import { Duplex, DuplexOptions } from "readable-stream";
 import { KaldiRecognizer } from "vosk-browser";
 
-// Polyfill process for browser
+// Polyfill process for browser - fixes process.nextTick errors
 if (typeof globalThis.process === 'undefined') {
   globalThis.process = {
     env: {},

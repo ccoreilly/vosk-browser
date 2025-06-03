@@ -4,7 +4,7 @@ import { UploadOutlined } from "@ant-design/icons";
 import styled from "styled-components";
 import { KaldiRecognizer } from "vosk-browser";
 
-// Polyfill process for browser
+// Polyfill process for browser - fixes process.nextTick errors
 if (typeof globalThis.process === 'undefined') {
   globalThis.process = {
     env: {},
