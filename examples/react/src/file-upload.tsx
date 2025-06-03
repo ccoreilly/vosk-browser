@@ -4,6 +4,20 @@ import { UploadOutlined } from "@ant-design/icons";
 import styled from "styled-components";
 import { KaldiRecognizer } from "vosk-browser";
 
+// Polyfill process for browser
+if (typeof globalThis.process === 'undefined') {
+  globalThis.process = {
+    env: {},
+    nextTick: function (cb: (...args: any[]) => void, ...args: any[]) {
+      return Promise.resolve().then(() => cb(...args));
+    }
+  } as any;
+} else if (typeof globalThis.process.nextTick !== 'function') {
+  globalThis.process.nextTick = function (cb: (...args: any[]) => void, ...args: any[]) {
+    return Promise.resolve().then(() => cb(...args));
+  };
+}
+
 const StyledButton = styled(Button)`
   box-sizing: border-box;
   margin-left: 0.5rem;
